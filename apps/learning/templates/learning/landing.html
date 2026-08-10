@@ -1,49 +1,95 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}ISYARA | Belajar BISINDO{% endblock %}
 {% block content %}
-<section class="bg-white">
-  <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
-    <div class="flex flex-col justify-center">
-      <p class="text-sm font-bold text-[var(--color-primary)]">Belajar BISINDO dengan AI</p>
-      <h1 class="mt-4 max-w-3xl text-5xl font-extrabold leading-tight text-[var(--color-dark)] sm:text-6xl">Belajar BISINDO. Berlatih. Dapatkan umpan balik langsung.</h1>
-      <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-700">ISYARA membantu kamu berlatih Bahasa Isyarat Indonesia dengan analisis gerakan berbasis computer vision, video referensi, dan progres belajar yang mudah dipantau.</p>
-      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-        <a href="{% url 'library' %}" class="rounded bg-[var(--color-primary)] px-5 py-3 text-center font-semibold text-white shadow-sm hover:bg-[var(--color-strong)]">Mulai Belajar</a>
-        <a href="#cara-kerja" class="rounded border border-slate-300 bg-white px-5 py-3 text-center font-semibold text-[var(--color-dark)] hover:bg-slate-50">Lihat Cara Kerja</a>
+
+<section class="relative overflow-hidden bg-white">
+    <!-- decorative hand icons -->
+  <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06]" aria-hidden="true">
+    <span class="material-symbols-outlined absolute left-[3%] top-[12%] text-[160px] text-[#A72A5B] rotate-[-12deg]">back_hand</span>
+    <span class="material-symbols-outlined absolute right-[6%] top-[16%] text-[160px] text-[#79564B] rotate-45">front_hand</span>
+    <span class="material-symbols-outlined absolute left-[1%] bottom-[10%] text-[168px] text-[#A72A5B] -rotate-45">front_hand</span>
+  </div>
+
+  <!-- soft blob accents -->
+  <div class="pointer-events-none absolute -left-2 top-[54%] h-[400px] w-[550px] rounded-full bg-[rgba(255,219,208,0.2)] blur-3xl"></div>
+  <div class="pointer-events-none absolute right-0 top-[44%] h-[300px] w-[350px] rounded-full bg-[rgba(255,219,208,0.2)] blur-3xl"></div>
+
+  <div class="relative mx-auto grid max-w-7xl gap-10 px-10 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
+
+    <!-- Left: text -->
+    <div class="flex flex-col items-start gap-6">
+      <p class="text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Belajar BISINDO dengan AI</p>
+
+      <h1 class="max-w-xl text-5xl font-extrabold leading-[1.25] tracking-[-0.96px] text-[#1B1C1B]">
+        Belajar BISINDO. Berlatih Lebih Percaya Diri Bersama ISYARA
+      </h1>
+
+      <p class="max-w-lg text-lg leading-7 text-[#564146]">
+        ISYARA membantu kamu berlatih Bahasa Isyarat Indonesia dengan analisis gerakan berbasis computer vision, video referensi, dan progres belajar yang mudah dipantau.
+      </p>
+
+      <div class="mt-2 flex flex-row items-center gap-4">
+        <a href="{% url 'library' %}"
+           class="rounded-full bg-[#A72A5B] px-8 py-3.5 text-sm font-semibold tracking-[0.14px] text-white shadow-sm hover:bg-[#8f2249] transition-colors">
+          Mulai Belajar
+        </a>
+        <a href="#cara-kerja"
+           class="flex items-center gap-2 rounded-full border border-[#8A7176] px-8 py-3.5 text-sm font-semibold tracking-[0.14px] text-[#1B1C1B] hover:bg-slate-50 transition-colors">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/>
+          </svg>
+          Lihat Cara Kerja
+        </a>
       </div>
     </div>
-    <div class="grid content-end">
-      <div class="rounded-lg border border-slate-200 bg-[var(--color-background)] p-5 shadow-sm">
-        <div class="grid aspect-[4/3] place-items-center rounded-lg bg-[var(--color-dark)] text-white">
-          <div class="text-center">
-            <div class="mx-auto mb-5 grid h-24 w-24 place-items-center rounded-full bg-[var(--color-primary)] text-5xl font-extrabold">AI</div>
-            <p class="text-xl font-bold">Video referensi + kamera + landmark</p>
-            <p class="mt-2 text-sm text-slate-300">{{ lesson_count }} pelajaran tersedia</p>
-          </div>
-        </div>
+
+<!-- Right: mascot video -->
+    <div class="relative flex justify-center lg:justify-end">
+      <div class="pointer-events-none absolute -inset-6 rounded-full bg-[rgba(255,219,208,0.25)] blur-3xl"></div>
+
+      <div class="relative aspect-[4/4.45] w-full max-w-[460px] overflow-hidden rounded-3xl shadow-[0_9px_6px_rgba(0,0,0,0.08),0_23px_15px_rgba(0,0,0,0.03)]">
+        <video
+          class="h-full w-full object-cover object-[40%_30%]"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster="{% static 'img/mascot1-wave-poster.jpg' %}"
+        >
+          <source src="{% static 'video/mascot1-wave.mp4' %}" type="video/mp4">
+        </video>
       </div>
     </div>
   </div>
 </section>
 
-<section id="cara-kerja" class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-  <div class="grid gap-4 md:grid-cols-4">
-    <div class="rounded-lg border-l-4 border-[var(--color-primary)] bg-white p-5 shadow-sm">
-      <h2 class="font-bold">Pelajari</h2>
-      <p class="mt-2 text-sm leading-6 text-slate-600">Tonton video BISINDO dari sumber yang dikurasi.</p>
+<!-- Bento features -->
+<section id="cara-kerja" class="relative mx-auto max-w-6xl px-10 py-24">
+  <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+
+    <div class="-rotate-[2.5deg] rounded-xl bg-[#C84474] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+      <h3 class="mb-4 font-serif text-2xl italic">Mulai Dari Mana Saja</h3>
+      <p class="text-sm leading-6 opacity-90">Akses koleksi video BISINDO terlengkap yang dikurasi khusus untuk memudahkan langkah awalmu.</p>
     </div>
-    <div class="rounded-lg border-l-4 border-[var(--color-primary-soft)] bg-white p-5 shadow-sm">
-      <h2 class="font-bold">Berlatih</h2>
-      <p class="mt-2 text-sm leading-6 text-slate-600">Ikuti gerakan menggunakan kamera perangkatmu.</p>
+
+    <div class="rotate-[2deg] rounded-xl bg-[#FFD0C1] p-8 text-[#7A574C] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+      <h3 class="mb-4 font-serif text-2xl italic">Latihan yang Terasa Nyata</h3>
+      <p class="text-sm leading-6 opacity-90">Gunakan kamera perangkatmu untuk berlatih secara interaktif dengan panduan visual yang presisi.</p>
     </div>
-    <div class="rounded-lg border-l-4 border-[var(--color-secondary)] bg-white p-5 shadow-sm">
-      <h2 class="font-bold">Dapatkan Feedback</h2>
-      <p class="mt-2 text-sm leading-6 text-slate-600">AI membaca tangan, jari, tubuh, dan komponen relevan.</p>
+
+    <div class="rotate-[1deg] rounded-xl bg-[#FFD9E1] p-8 text-[#3F001B] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+      <h3 class="mb-4 font-serif text-2xl italic">Langsung di Koreksi AI</h3>
+      <p class="text-sm leading-6 opacity-90">Dapatkan umpan balik instan dari teknologi AI kami yang menganalisis setiap detail gerakan tanganmu.</p>
     </div>
-    <div class="rounded-lg border-l-4 border-[var(--color-dark)] bg-white p-5 shadow-sm">
-      <h2 class="font-bold">Tingkatkan</h2>
-      <p class="mt-2 text-sm leading-6 text-slate-600">Pantau progres latihan dari waktu ke waktu.</p>
+
+    <div class="-rotate-[4deg] rounded-xl bg-[#FFDBD0] p-8 text-[#2E150D] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+      <h3 class="mb-4 font-serif text-2xl italic">Lihat Progresmu Melaju</h3>
+      <p class="text-sm leading-6 opacity-90">Pantau perkembangan kemampuanmu melalui analitik mendalam yang memotivasi setiap harinya.</p>
     </div>
+
   </div>
 </section>
+
 {% endblock %}

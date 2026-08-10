@@ -100,3 +100,17 @@ textarea:focus-visible {
     radial-gradient(circle at center, #fff 58%, transparent 59%),
     conic-gradient(#0f766e var(--value), #e2e8f0 0);
 }
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
