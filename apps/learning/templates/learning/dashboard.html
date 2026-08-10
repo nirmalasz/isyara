@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Progres | ISYARA{% endblock %}
+{% block content %}
+<section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">Dashboard Progres</p>
+      <h1 class="mt-2 text-3xl font-black sm:text-4xl">Latihan BISINDO kamu</h1>
+    </div>
+    <a href="{% url 'library' %}" class="rounded bg-[var(--color-primary)] px-5 py-3 text-center font-bold text-white hover:bg-[var(--color-strong)]">Lanjut Belajar</a>
+  </div>
+
+  <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="bg-white p-5 shadow-sm">
+      <p class="text-sm font-bold text-slate-500">Penyelesaian</p>
+      <p class="mt-2 text-3xl font-black">{{ completion_percent }}%</p>
+    </div>
+    <div class="bg-white p-5 shadow-sm">
+      <p class="text-sm font-bold text-slate-500">Selesai</p>
+      <p class="mt-2 text-3xl font-black">{{ completed_count }}/{{ lesson_count }}</p>
+    </div>
+    <div class="bg-white p-5 shadow-sm">
+      <p class="text-sm font-bold text-slate-500">Skor Terbaik</p>
+      <p class="mt-2 text-3xl font-black">{{ best_score }}</p>
+    </div>
+    <div class="bg-white p-5 shadow-sm">
+      <p class="text-sm font-bold text-slate-500">Percobaan</p>
+      <p class="mt-2 text-3xl font-black">{{ attempt_count }}</p>
+    </div>
+  </div>
+
+  <div class="mt-8 overflow-hidden rounded border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-5 py-4">
+      <h2 class="text-xl font-black">Progres pelajaran terbaru</h2>
+    </div>
+    <div class="divide-y divide-slate-100">
+      {% for record in progress_records %}
+        <div class="grid gap-3 px-5 py-4 sm:grid-cols-[1fr_120px_120px_120px] sm:items-center">
+          <div>
+            <p class="font-black">{{ record.lesson.title }}</p>
+            <p class="text-sm text-slate-500">{% if record.lesson.sign.category == "alphabet" %}Alfabet{% else %}Kosakata{% endif %}</p>
+          </div>
+          <p class="text-sm"><span class="font-bold">{{ record.attempts }}</span> percobaan</p>
+          <p class="text-sm"><span class="font-bold">{{ record.best_score }}</span> terbaik</p>
+          <p class="text-sm font-bold {% if record.completed %}text-[var(--color-primary)]{% else %}text-amber-700{% endif %}">
+            {% if record.completed %}Selesai{% else %}Berjalan{% endif %}
+          </p>
+        </div>
+      {% empty %}
+        <div class="px-5 py-8 text-slate-600">Belum ada hasil latihan.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

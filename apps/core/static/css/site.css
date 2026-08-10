@@ -1,0 +1,102 @@
+:root {
+  --color-primary-soft: #e78197;
+  --color-primary: #bd4e68;
+  --color-strong: #9f3e55;
+  --color-secondary: #6d3b3a;
+  --color-dark: #3f2527;
+  --color-background: #fff8f5;
+  --color-surface: #ffffff;
+  --color-primary-tint: #fde8ee;
+  --radius-card: 8px;
+}
+
+* {
+  letter-spacing: 0;
+}
+
+body {
+  font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.camera-frame video {
+  display: block;
+  position: relative;
+  transform: scaleX(-1);
+}
+
+.camera-container {
+  aspect-ratio: 16 / 9;
+  position: relative;
+}
+
+.landmark-overlay {
+  inset: 0;
+  height: 100%;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+}
+
+#referenceVideo.reference-mirrored {
+  transform: scaleX(-1);
+}
+
+.tracking-pill {
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  padding: 0.5rem 0.65rem;
+}
+
+.tracking-pill.ok {
+  background: #ccfbf1;
+  color: #115e59;
+}
+
+.tracking-pill.warn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.guidance-line {
+  border-left: 4px solid #cbd5e1;
+  padding-left: 0.75rem;
+}
+
+.guidance-line.ok {
+  border-color: #0f766e;
+  color: #115e59;
+}
+
+.guidance-line.warn {
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.guidance-line.neutral {
+  border-color: #64748b;
+}
+
+.progress-ring {
+  background:
+    radial-gradient(circle at center, #fff 58%, transparent 59%),
+    conic-gradient(#0f766e var(--value), #e2e8f0 0);
+}

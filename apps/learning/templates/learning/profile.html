@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Profil Saya | ISYARA{% endblock %}
+{% block content %}
+<section class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+  <div class="grid gap-6 lg:grid-cols-[320px_1fr]">
+    <aside class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      {% if profile.profile_photo %}
+        <img src="{{ profile.profile_photo.url }}" alt="Foto profil {{ user.display_name|default:user.email }}" class="h-28 w-28 rounded-full object-cover">
+      {% else %}
+        <div class="grid h-28 w-28 place-items-center rounded-full bg-[var(--color-primary)] text-3xl font-extrabold text-white">{{ profile.initials }}</div>
+      {% endif %}
+      <h1 class="mt-5 text-2xl font-bold">{{ user.display_name|default:user.email }}</h1>
+      <p class="mt-1 text-sm text-slate-600">{{ user.email }}</p>
+      <div class="mt-5 space-y-3 text-sm">
+        <p><span class="font-semibold">Level BISINDO</span><br>{{ profile.get_learning_level_display }}</p>
+        <p><span class="font-semibold">Member sejak</span><br>{{ profile.joined_month }}</p>
+      </div>
+      <a href="{% url 'profile_edit' %}" class="mt-6 inline-flex rounded bg-[var(--color-primary)] px-4 py-3 font-semibold text-white hover:bg-[var(--color-strong)]">Edit Profil</a>
+    </aside>
+    <div class="space-y-6">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-lg bg-white p-5 shadow-sm"><p class="text-sm font-semibold text-slate-500">Pelajaran selesai</p><p class="mt-2 text-3xl font-extrabold">{{ completed_count }}</p></div>
+        <div class="rounded-lg bg-white p-5 shadow-sm"><p class="text-sm font-semibold text-slate-500">Latihan AI</p><p class="mt-2 text-3xl font-extrabold">{{ practice_count }}</p></div>
+        <div class="rounded-lg bg-white p-5 shadow-sm"><p class="text-sm font-semibold text-slate-500">Rata-rata akurasi</p><p class="mt-2 text-3xl font-extrabold">{{ average_score }}%</p></div>
+        <div class="rounded-lg bg-white p-5 shadow-sm"><p class="text-sm font-semibold text-slate-500">Tanda dikuasai</p><p class="mt-2 text-3xl font-extrabold">{{ mastered_count }}</p></div>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-bold">Aktivitas terbaru</h2>
+        <div class="mt-4 divide-y divide-slate-100">
+          {% for session in recent_sessions %}
+            <div class="flex items-center justify-between py-3">
+              <span class="font-semibold">{{ session.lesson.title }}</span>
+              <span class="font-bold text-[var(--color-primary)]">{{ session.score }}%</span>
+            </div>
+          {% empty %}
+            <p class="text-sm text-slate-600">Belum ada latihan yang dianalisis.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

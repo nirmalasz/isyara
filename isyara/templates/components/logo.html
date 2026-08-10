@@ -1,0 +1,6 @@
+<a href="{% url 'landing' %}" class="inline-flex items-center gap-3 text-[var(--color-dark)]">
+  <span class="{% if size == 'large' %}h-14 w-14 text-2xl{% elif size == 'footer' %}h-9 w-9 text-base{% else %}h-10 w-10 text-lg{% endif %} grid place-items-center rounded-lg bg-[var(--color-primary)] font-extrabold text-white shadow-sm" aria-hidden="true">
+    ✋
+  </span>
+  <span class="{% if size == 'large' %}text-3xl{% elif size == 'footer' %}text-lg{% else %}text-xl{% endif %} font-extrabold tracking-wide">ISYARA</span>
+</a>

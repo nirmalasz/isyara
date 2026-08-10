@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Halaman Tidak Ditemukan | ISYARA{% endblock %}
+{% block content %}
+<section class="mx-auto grid min-h-[60vh] max-w-3xl place-items-center px-4 py-16 text-center sm:px-6 lg:px-8">
+  <div>
+    <p class="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">404</p>
+    <h1 class="mt-3 text-3xl font-extrabold text-[var(--color-dark)]">Halaman tidak ditemukan</h1>
+    <p class="mt-3 text-slate-600">Tautan yang kamu buka mungkin berubah atau pelajarannya belum tersedia.</p>
+    <a href="{% url 'library' %}" class="mt-6 inline-flex rounded bg-[var(--color-primary)] px-5 py-3 font-semibold text-white hover:bg-[var(--color-strong)]">Lihat Perpustakaan</a>
+  </div>
+</section>
+{% endblock %}

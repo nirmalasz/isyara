@@ -1,0 +1,62 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ISYARA{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body class="min-h-screen bg-[var(--color-background)] text-[var(--color-dark)]">
+  <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      {% include "components/logo.html" %}
+      <div class="hidden items-center gap-1 lg:flex">
+        {% include "components/nav_link.html" with href_name="landing" label="Beranda" %}
+        {% include "components/nav_link.html" with href_name="library" label="Perpustakaan" %}
+        {% if user.is_authenticated %}
+          {% include "components/nav_link.html" with href_name="dashboard" label="Progres" %}
+          {% include "components/nav_link.html" with href_name="profile" label="Profil Saya" %}
+        {% else %}
+          <a href="#tentang" class="rounded px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-[var(--color-primary-tint)] hover:text-[var(--color-primary)]">Tentang</a>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2">
+        {% if user.is_authenticated %}
+          <a href="{% url 'profile' %}" class="hidden rounded-full bg-[var(--color-primary-tint)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)] sm:inline-flex">{{ user.display_name|default:user.email }}</a>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[var(--color-dark)] hover:bg-slate-50">Keluar</button>
+          </form>
+        {% else %}
+          <a href="{% url 'login' %}" class="hidden rounded px-4 py-2 text-sm font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary-tint)] sm:inline-flex">Masuk</a>
+          <a href="{% url 'signup' %}" class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--color-strong)]">Daftar</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    {% if messages %}
+      <div class="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+        {% for message in messages %}
+          <div class="rounded border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-semibold text-teal-900">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      {% include "components/logo.html" with size="footer" %}
+      <p>Belajar BISINDO dengan latihan AI dan umpan balik gerakan.</p>
+    </div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
