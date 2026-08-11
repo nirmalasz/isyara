@@ -23,7 +23,7 @@
           {% include "components/nav_link.html" with href_name="dashboard" label="Progres" %}
           {% include "components/nav_link.html" with href_name="profile" label="Profil Saya" %}
         {% else %}
-          <a href="#tentang" class="rounded px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-[var(--color-primary-tint)] hover:text-[var(--color-primary)]">Tentang</a>
+          <a href="{% url 'landing' %}#tentang" class="rounded px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-[var(--color-primary-tint)] hover:text-[var(--color-primary)]">Tentang</a>
         {% endif %}
       </div>
       <div class="flex items-center gap-2">

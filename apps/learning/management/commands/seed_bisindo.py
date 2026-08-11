@@ -11,11 +11,19 @@ VOCABULARY = [
     ("Nama", "Digunakan saat memperkenalkan nama."),
     ("Saya", "Kata ganti orang pertama untuk merujuk diri sendiri."),
     ("Kamu", "Kata ganti orang kedua saat menyapa lawan bicara."),
+    ("Aku", "Kata ganti orang pertama informal untuk merujuk diri sendiri."),
+    ("Dia", "Kata ganti orang ketiga tunggal untuk merujuk seseorang."),
+    ("Kami", "Kata ganti orang pertama jamak, tidak termasuk lawan bicara."),
+    ("Kalian", "Kata ganti orang kedua jamak saat menyapa lebih dari satu orang."),
     ("Makan", "Isyarat aktivitas harian untuk makan."),
     ("Minum", "Isyarat aktivitas harian untuk minum."),
     ("Belajar", "Isyarat yang berkaitan dengan belajar dan studi."),
     ("Sekolah", "Isyarat tempat untuk sekolah."),
     ("Selamat Pagi", "Sapaan pagi untuk memulai hari dengan sopan.", "https://youtu.be/WP6pSzGk1fM?si=CD29AmXvv3cP6k4F", 0),
+    ("Selamat Siang", "Sapaan umum untuk waktu tengah hari hingga sore."),
+    ("Selamat Sore", "Sapaan untuk menyapa di waktu sore hari."),
+    ("Selamat Malam", "Sapaan untuk menyapa atau berpamitan di malam hari."),
+    ("Angka", "Pelajaran ringkasan angka dasar dalam BISINDO."),
 ]
 
 ALPHABET_OVERVIEW = (
