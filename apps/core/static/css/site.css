@@ -100,3 +100,187 @@ textarea:focus-visible {
     radial-gradient(circle at center, #fff 58%, transparent 59%),
     conic-gradient(#0f766e var(--value), #e2e8f0 0);
 }
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+.marquee-text-metallic {
+  background: linear-gradient(115deg, #E8A0B8 0%, #FFD9E1 25%, #C84474 50%, #FFD9E1 75%, #E8A0B8 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: metallic-shine 4s linear infinite;
+}
+
+@keyframes metallic-shine {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* === Library page: card & background pattern === */
+.hand-pattern-bg {
+  position: relative;
+  overflow: hidden;
+}
+.hand-pattern-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: none;
+}
+
+.lib-hand-icon {
+  position: absolute;
+  font-family: 'Material Symbols Outlined';
+  color: #A72A5B;
+  pointer-events: none;
+  z-index: 0;
+  line-height: 1;
+}
+
+.lib-section-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 40px;
+  color: #1B1C1B;
+}
+.lib-section-bar {
+  width: 64px;
+  height: 4px;
+  border-radius: 9999px;
+  background: #A72A5B;
+  margin-top: 8px;
+}
+
+.lib-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  border: 1px solid rgba(221, 191, 197, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  z-index: 10;
+}
+.lib-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(167, 42, 91, 0.12);
+}
+
+.lib-card-thumb {
+  aspect-ratio: 16 / 9;
+  background: #EFEDEC;
+  position: relative;
+  overflow: hidden;
+}
+.lib-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lib-card-thumb.placeholder {
+  display: grid;
+  place-items: center;
+  background: #DBDAD9;
+  color: #8A7176;
+}
+
+.lib-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #FFFFFF;
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #A72A5B;
+}
+.lib-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #006B20;
+}
+.lib-badge.soon {
+  color: #564146;
+  background: #EFEDEC;
+}
+.lib-badge.soon .lib-badge-dot {
+  display: none;
+}
+
+.lib-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+.lib-card-tag {
+  display: inline-flex;
+  padding: 4px 8px;
+  background: #EFEDEC;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #564146;
+  width: fit-content;
+}
+.lib-card-title {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1B1C1B;
+}
+.lib-card-desc {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 21px;
+  color: #564146;
+  flex: 1;
+}
+.lib-card-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(221, 191, 197, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #564146;
+}
+.lib-card-footer .lib-cta {
+  color: #A72A5B;
+  font-weight: 700;
+}
+
+.lib-card-big {
+  grid-column: span 1;
+}
+@media (min-width: 640px) {
+  .lib-card-big {
+    grid-column: span 2;
+  }
+}

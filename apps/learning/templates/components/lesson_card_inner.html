@@ -1,0 +1,25 @@
+<div class="lib-card-thumb {% if not lesson.youtube_thumbnail_url %}placeholder{% endif %}">
+  {% if lesson.youtube_thumbnail_url %}
+    <img src="{{ lesson.youtube_thumbnail_url }}" alt="Thumbnail {{ lesson.title }}">
+    <span class="lib-badge">
+      <span class="lib-badge-dot"></span>
+      Video Tersedia
+    </span>
+  {% else %}
+    <div class="flex flex-col items-center gap-2 text-[#8A7176]">
+      <span class="material-symbols-outlined" style="font-size:40px;">videocam_off</span>
+      <span class="text-sm font-semibold">Video Segera Hadir</span>
+    </div>
+    <span class="lib-badge soon">Segera</span>
+  {% endif %}
+</div>
+
+<div class="lib-card-body">
+  <span class="lib-card-tag">{% if lesson.sign.category == "alphabet" %}Alfabet{% else %}Kosakata{% endif %}</span>
+  <h3 class="lib-card-title">{{ lesson.title }}</h3>
+  <p class="lib-card-desc">{{ lesson.summary }}</p>
+  <div class="lib-card-footer">
+    <span>{{ lesson.estimated_minutes }} menit</span>
+    <span class="lib-cta">Pelajari →</span>
+  </div>
+</div>

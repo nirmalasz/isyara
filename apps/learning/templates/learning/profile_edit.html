@@ -1,30 +1,66 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Edit Profil | ISYARA{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-  <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-    <h1 class="text-2xl font-bold">Edit Profil</h1>
-    <form method="post" enctype="multipart/form-data" class="mt-6 space-y-5">
-      {% csrf_token %}
-      {{ form.non_field_errors }}
-      {% for field in form %}
-        <div class="{% if field.field.widget.input_type == 'checkbox' %}flex items-center gap-3{% endif %}">
-          {% if field.field.widget.input_type == 'checkbox' %}
-            {{ field }}
-          {% endif %}
-          <label for="{{ field.id_for_label }}" class="text-sm font-semibold">{{ field.label }}</label>
-          {% if field.field.widget.input_type != 'checkbox' %}
-            <div class="mt-2">{{ field }}</div>
-          {% endif %}
-          {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
-          {{ field.errors }}
+
+<section class="hand-pattern-bg relative bg-white font-['Poppins']">
+
+  <!-- decorative hand icons -->
+  <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06]" aria-hidden="true">
+    <span class="material-symbols-outlined lib-hand-icon absolute left-[4%] top-[4%] text-[140px] rotate-[-12deg]">back_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute right-[6%] top-[10%] text-[130px] rotate-45">front_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute left-[6%] bottom-[6%] text-[130px] rotate-[18deg]">waving_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute right-[4%] bottom-[2%] text-[140px] -rotate-45">pan_tool</span>
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+
+    <p class="text-sm font-semibold uppercase tracking-[1.4px] text-[#A72A5B]">Pengaturan Akun</p>
+    <h1 class="mt-2 text-4xl font-extrabold leading-tight tracking-[-0.96px] text-[#1B1C1B]">Edit Profil</h1>
+    <p class="mt-2 text-[#564146]">Perbarui informasi profil dan preferensi belajarmu.</p>
+
+    <div class="lib-card lib-form mt-8 p-8">
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="rounded-lg bg-[#FDECEA] px-4 py-3 text-sm font-semibold text-[#A72A5B]">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        {% for field in form %}
+          <div>
+            {% if field.field.widget.input_type == 'checkbox' %}
+              <label for="{{ field.id_for_label }}" class="flex items-center gap-3 text-sm font-semibold text-[#1B1C1B]">
+                {{ field }}
+                {{ field.label }}
+              </label>
+            {% else %}
+              <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-[#1B1C1B]">{{ field.label }}</label>
+              <div class="mt-2">{{ field }}</div>
+            {% endif %}
+
+            {% if field.help_text %}
+              <p class="mt-1.5 text-xs text-[#8A7176]">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+              <p class="mt-1.5 text-xs font-semibold text-[#A72A5B]">{{ field.errors }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="flex flex-col gap-3 border-t border-[#F0DCD4] pt-6 sm:flex-row">
+          <button class="inline-flex items-center justify-center gap-2 rounded-full bg-[#A72A5B] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#8f2249]">
+            <span class="material-symbols-outlined" style="font-size:18px;">save</span>
+            Simpan Profil
+          </button>
+          <a href="{% url 'profile' %}" class="inline-flex items-center justify-center rounded-full border border-[#DDBFC5] bg-white px-6 py-3 text-sm font-semibold text-[#1B1C1B] hover:bg-[#FFF3EE]">
+            Batal
+          </a>
         </div>
-      {% endfor %}
-      <div class="flex flex-col gap-3 sm:flex-row">
-        <button class="rounded bg-[var(--color-primary)] px-5 py-3 font-semibold text-white hover:bg-[var(--color-strong)]">Simpan Profil</button>
-        <a href="{% url 'profile' %}" class="rounded border border-slate-300 bg-white px-5 py-3 text-center font-semibold text-[var(--color-dark)] hover:bg-slate-50">Batal</a>
-      </div>
-    </form>
+      </form>
+    </div>
+
   </div>
 </section>
 {% endblock %}

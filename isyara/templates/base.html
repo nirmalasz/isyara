@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
 </head>
@@ -22,7 +23,7 @@
           {% include "components/nav_link.html" with href_name="dashboard" label="Progres" %}
           {% include "components/nav_link.html" with href_name="profile" label="Profil Saya" %}
         {% else %}
-          <a href="#tentang" class="rounded px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-[var(--color-primary-tint)] hover:text-[var(--color-primary)]">Tentang</a>
+          <a href="{% url 'landing' %}#tentang" class="rounded px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-[var(--color-primary-tint)] hover:text-[var(--color-primary)]">Tentang</a>
         {% endif %}
       </div>
       <div class="flex items-center gap-2">
