@@ -4,6 +4,7 @@
 {% block content %}
 
 <style>
+  /* ===== Marquee (tetap) ===== */
   @keyframes marquee-scroll {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
@@ -30,15 +31,134 @@
     0% { background-position: 0% center; }
     100% { background-position: 200% center; }
   }
+
+  /* ===== Hero: video zoom-in saat masuk ===== */
+  @keyframes videoZoomIn {
+    0% { transform: scale(1.28); filter: brightness(0.85); }
+    100% { transform: scale(1); filter: brightness(1); }
+  }
+  .hero-video {
+    animation: videoZoomIn 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .hero-video-wrap {
+    overflow: hidden; /* penting biar zoom video ga bocor keluar rounded corner */
+  }
+
+  /* ===== Hero: teks masuk berurutan ===== */
+  @keyframes fadeUpIn {
+    0% { opacity: 0; transform: translateY(22px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .hero-in {
+    opacity: 0;
+    animation: fadeUpIn 1.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .hero-in-1 { animation-delay: 0.1s; }
+  .hero-in-2 { animation-delay: 0.45s; }
+  .hero-in-3 { animation-delay: 0.85s; }
+  .hero-in-4 { animation-delay: 1.25s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-video, .hero-in, .feature-card, .float-hand-a, .float-hand-b, .float-hand-c {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  /* ===== Ikon tangan background: melayang pelan ===== */
+  @keyframes floatA {
+    0%, 100% { transform: translate(0, 0) rotate(-12deg); }
+    50% { transform: translate(10px, -16px) rotate(-6deg); }
+  }
+  @keyframes floatB {
+    0%, 100% { transform: translate(0, 0) rotate(45deg); }
+    50% { transform: translate(-12px, 14px) rotate(52deg); }
+  }
+  @keyframes floatC {
+    0%, 100% { transform: translate(0, 0) rotate(-45deg); }
+    50% { transform: translate(14px, 10px) rotate(-38deg); }
+  }
+  .float-hand-a { animation: floatA 16s ease-in-out infinite; }
+  .float-hand-b { animation: floatB 19s ease-in-out infinite; }
+  .float-hand-c { animation: floatC 17s ease-in-out infinite; }
+
+  /* ===== Card fitur: rotasi dasar tiap kartu + arah "punch" saat diklik ===== */
+  .feature-card:nth-child(1) { --base-rot: -2.5deg; --punch-x: -20px; --punch-rot: -6deg; }
+  .feature-card:nth-child(2) { --base-rot: 2deg;    --punch-x: 20px;  --punch-rot: 7deg; }
+  .feature-card:nth-child(3) { --base-rot: 1deg;     --punch-x: -18px; --punch-rot: -5deg; }
+  .feature-card:nth-child(4) { --base-rot: -4deg;    --punch-x: 20px;  --punch-rot: 8deg; }
+
+  /* ===== Card fitur: zig-zag + reveal on scroll ===== */
+  .feature-card {
+    --entry-y: 28px;
+    --zig: 0px;
+    --press-x: 0px;
+    --hover-scale: 1;
+    opacity: 0;
+    transform: translateY(var(--entry-y)) translateX(var(--press-x)) rotate(var(--base-rot)) scale(var(--hover-scale));
+    transition: opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .feature-card.in-view {
+    --entry-y: var(--zig);
+    opacity: 1;
+  }
+  .feature-card:hover {
+    --hover-scale: 1.03;
+  }
+  /* offset naik-turun ala zig-zag, hanya berlaku di layar lebar biar rapi di mobile */
+  @media (min-width: 1024px) {
+    .feature-card:nth-child(odd)  { --zig: -18px; }
+    .feature-card:nth-child(even) { --zig: 18px; }
+  }
+
+  /* efek "goyang" pelan ke samping + rotasi tambahan saat card diklik/ditekan */
+  @keyframes cardPunch {
+    0%   { transform: translateY(var(--zig)) translateX(var(--press-x)) rotate(var(--base-rot)) scale(var(--hover-scale)); }
+    35%  { transform: translateY(var(--zig)) translateX(var(--punch-x)) rotate(calc(var(--base-rot) + var(--punch-rot))) scale(var(--hover-scale)); }
+    100% { transform: translateY(var(--zig)) translateX(var(--press-x)) rotate(var(--base-rot)) scale(var(--hover-scale)); }
+  }
+  .feature-card.punch {
+    animation: cardPunch 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ===== Section Tentang: tangan parallax ikut kursor ===== */
+  .parallax-hand {
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+
+  /* ===== Section Tentang: tangan melambai saat area di-hover ===== */
+  .wave-hand {
+    display: inline-block;
+    transform-origin: 70% 70%;
+  }
+  @keyframes waveHand {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(14deg); }
+    30% { transform: rotate(-8deg); }
+    45% { transform: rotate(14deg); }
+    60% { transform: rotate(-4deg); }
+    75% { transform: rotate(8deg); }
+  }
+  .tentang-interactive:hover .wave-hand {
+    animation: waveHand 1.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .parallax-hand { transition: none !important; transform: none !important; }
+    .tentang-interactive:hover .wave-hand { animation: none !important; }
+  }
 </style>
 
 
 <section class="relative overflow-hidden bg-white">
     <!-- decorative hand icons -->
   <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06]" aria-hidden="true">
-    <span class="material-symbols-outlined absolute left-[3%] top-[12%] text-[160px] text-[#A72A5B] rotate-[-12deg]">back_hand</span>
-    <span class="material-symbols-outlined absolute right-[6%] top-[16%] text-[160px] text-[#79564B] rotate-45">front_hand</span>
-    <span class="material-symbols-outlined absolute left-[1%] bottom-[10%] text-[168px] text-[#A72A5B] -rotate-45">front_hand</span>
+    <span class="material-symbols-outlined float-hand-a absolute left-[3%] top-[12%] text-[160px] text-[#A72A5B] rotate-[-12deg]">back_hand</span>
+    <span class="material-symbols-outlined float-hand-b absolute right-[6%] top-[16%] text-[160px] text-[#79564B] rotate-45">front_hand</span>
+    <span class="material-symbols-outlined float-hand-c absolute left-[1%] bottom-[10%] text-[168px] text-[#A72A5B] -rotate-45">front_hand</span>
   </div>
 
   <!-- soft blob accents -->
@@ -49,17 +169,17 @@
 
     <!-- Left: text -->
     <div class="flex flex-col items-start gap-6">
-      <p class="text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Belajar BISINDO dengan AI</p>
+      <p class="hero-in hero-in-1 text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Belajar BISINDO dengan AI</p>
 
-      <h1 class="max-w-xl text-5xl font-extrabold leading-[1.25] tracking-[-0.96px] text-[#1B1C1B]">
+      <h1 class="hero-in hero-in-2 max-w-xl text-5xl font-extrabold leading-[1.25] tracking-[-0.96px] text-[#1B1C1B]">
         Belajar BISINDO. Berlatih Lebih Percaya Diri Bersama ISYARA
       </h1>
 
-      <p class="max-w-lg text-lg leading-7 text-[#564146]">
+      <p class="hero-in hero-in-3 max-w-lg text-lg leading-7 text-[#564146]">
         ISYARA membantu kamu berlatih Bahasa Isyarat Indonesia dengan analisis gerakan berbasis computer vision, video referensi, dan progres belajar yang mudah dipantau.
       </p>
 
-      <div class="mt-2 flex flex-row items-center gap-4">
+      <div class="hero-in hero-in-4 mt-2 flex flex-row items-center gap-4">
         <a href="{% url 'library' %}"
            class="rounded-full bg-[#A72A5B] px-8 py-3.5 text-sm font-semibold tracking-[0.14px] text-white shadow-sm hover:bg-[#8f2249] transition-colors">
           Mulai Belajar
@@ -78,9 +198,9 @@
     <div class="relative flex justify-center lg:justify-end">
       <div class="pointer-events-none absolute -inset-6 rounded-full bg-[rgba(255,219,208,0.25)] blur-3xl"></div>
 
-      <div class="relative aspect-[4/4.45] w-full max-w-[460px] overflow-hidden rounded-3xl shadow-[0_9px_6px_rgba(0,0,0,0.08),0_23px_15px_rgba(0,0,0,0.03)]">
+      <div class="hero-video-wrap relative aspect-[4/4.45] w-full max-w-[460px] overflow-hidden rounded-3xl shadow-[0_9px_6px_rgba(0,0,0,0.08),0_23px_15px_rgba(0,0,0,0.03)]">
         <video
-          class="h-full w-full object-cover object-[40%_30%]"
+          class="hero-video h-full w-full object-cover object-[40%_30%]"
           autoplay
           muted
           loop
@@ -126,36 +246,90 @@
 
   <div class="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
 
-    <div class="-rotate-[2.5deg] rounded-xl bg-[#C84474] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#C84474] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">Mulai Dari <span class="font-bold not-italic">Mana Saja</span></h3>
       <p class="text-sm leading-6 opacity-90">Akses koleksi video BISINDO terlengkap yang dikurasi khusus untuk memudahkan langkah awalmu.</p>
     </div>
 
-    <div class="rotate-[2deg] rounded-xl bg-[#FFD0C1] p-8 text-[#7A574C] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#FFD0C1] p-8 text-[#7A574C] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">Latihan yang Terasa <span class="font-bold not-italic">Nyata</span></h3>
       <p class="text-sm leading-6 opacity-90">Gunakan kamera perangkatmu untuk berlatih secara interaktif dengan panduan visual yang presisi.</p>
     </div>
 
-    <div class="rotate-[1deg] rounded-xl bg-[#FFD9E1] p-8 text-[#3F001B] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#FFD9E1] p-8 text-[#3F001B] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">Langsung di Koreksi <span class="font-bold not-italic">AI</span></h3>
       <p class="text-sm leading-6 opacity-90">Dapatkan umpan balik instan dari teknologi AI kami yang menganalisis setiap detail gerakan tanganmu.</p>
     </div>
 
-    <div class="-rotate-[4deg] rounded-xl bg-[#FFDBD0] p-8 text-[#2E150D] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#FFDBD0] p-8 text-[#2E150D] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">Lihat <span class="font-bold not-italic">Progresmu</span> Melaju</h3>
       <p class="text-sm leading-6 opacity-90">Pantau perkembangan kemampuanmu melalui analitik mendalam yang memotivasi setiap harinya.</p>
     </div>
 
   </div>
 </section>
-<section id="tentang" class="relative mx-auto max-w-5xl px-10 py-20 font-['Poppins']">
-  <div class="text-center">
+<section id="tentang" class="tentang-interactive relative mx-auto max-w-5xl overflow-hidden px-10 py-20 font-['Poppins']">
+  <!-- tangan dekoratif yang ikut gerak mengikuti kursor (parallax) -->
+  <span class="material-symbols-outlined parallax-hand absolute left-[6%] top-[14%] text-[110px] text-[#A72A5B] opacity-[0.08]" data-speed="18" aria-hidden="true">front_hand</span>
+  <span class="material-symbols-outlined parallax-hand absolute right-[8%] top-[8%] text-[90px] text-[#C84474] opacity-[0.08]" data-speed="30" aria-hidden="true">pan_tool</span>
+  <span class="material-symbols-outlined parallax-hand absolute right-[4%] bottom-[10%] text-[130px] text-[#79564B] opacity-[0.08]" data-speed="12" aria-hidden="true">back_hand</span>
+
+  <div class="relative text-center">
     <p class="text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Tentang Kami</p>
-    <h2 class="mt-3 text-4xl font-extrabold text-[#1B1C1B]">Kenapa ISYARA?</h2>
+    <h2 class="mt-3 flex items-center justify-center gap-3 text-4xl font-extrabold text-[#1B1C1B]">
+      Kenapa ISYARA?
+    </h2>
     <p class="mx-auto mt-4 max-w-2xl text-lg leading-7 text-[#564146]">
       ISYARA lahir dari keinginan membuat belajar BISINDO lebih mudah diakses siapa saja — pelajar, guru, orang tua, hingga siapa pun yang ingin membangun komunikasi lebih inklusif. Dengan bantuan computer vision, kami ingin latihan bahasa isyarat terasa interaktif dan memberi umpan balik nyata, bukan cuma menonton video pasif.
     </p>
   </div>
 </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const cards = document.querySelectorAll('.feature-card');
+
+    // reveal on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('in-view'), i * 90);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    cards.forEach((card) => observer.observe(card));
+
+    // efek "punch": card gerak dikit ke samping + rotasi saat diklik
+    cards.forEach((card) => {
+      card.addEventListener('click', () => {
+        card.classList.remove('punch');
+        void card.offsetWidth; // reset animasi biar bisa retrigger
+        card.classList.add('punch');
+      });
+      card.addEventListener('animationend', (e) => {
+        if (e.animationName === 'cardPunch') card.classList.remove('punch');
+      });
+    });
+
+    // tangan dekoratif di section "Tentang Kami" ikut gerak mengikuti kursor
+    const tentang = document.querySelector('.tentang-interactive');
+    if (tentang) {
+      const hands = tentang.querySelectorAll('.parallax-hand');
+      tentang.addEventListener('mousemove', (e) => {
+        const rect = tentang.getBoundingClientRect();
+        const relX = (e.clientX - rect.left) / rect.width - 0.5;  // -0.5 .. 0.5
+        const relY = (e.clientY - rect.top) / rect.height - 0.5;
+        hands.forEach((hand) => {
+          const speed = parseFloat(hand.dataset.speed) || 15;
+          hand.style.transform = `translate(${relX * speed}px, ${relY * speed}px) rotate(${relX * 6}deg)`;
+        });
+      });
+      tentang.addEventListener('mouseleave', () => {
+        hands.forEach((hand) => { hand.style.transform = 'translate(0, 0) rotate(0deg)'; });
+      });
+    }
+  });
+</script>
 
 {% endblock %}
