@@ -126,3 +126,32 @@ class ProfileForm(forms.ModelForm):
         image.save(output, image_format, quality=85, optimize=True)
         with open(profile.profile_photo.path, "wb") as photo_file:
             photo_file.write(output.getvalue())
+
+
+class OnboardingForm(forms.ModelForm):
+    GOAL_CHOICES = [
+        ("daily", "Komunikasi sehari-hari"),
+        ("deaf_family_friends", "Berkomunikasi dengan keluarga/teman Tuli"),
+        ("school", "Sekolah atau kampus"),
+        ("work_service", "Dunia kerja / pelayanan"),
+        ("self", "Belajar untuk diri sendiri"),
+    ]
+    FAMILIARITY_CHOICES = [
+        ("new", "Belum pernah belajar"),
+        ("some", "Pernah belajar sedikit"),
+        ("basic", "Sudah memahami dasar"),
+    ]
+
+    learning_goal = forms.ChoiceField(label="Apa tujuanmu belajar BISINDO?", choices=GOAL_CHOICES, widget=forms.RadioSelect)
+    bisindo_familiarity = forms.ChoiceField(label="Seberapa familiar kamu dengan BISINDO?", choices=FAMILIARITY_CHOICES, widget=forms.RadioSelect)
+
+    class Meta:
+        model = UserProfile
+        fields = ("learning_goal", "bisindo_familiarity")
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        profile.onboarding_completed = True
+        if commit:
+            profile.save(update_fields=["learning_goal", "bisindo_familiarity", "onboarding_completed", "updated_at"])
+        return profile

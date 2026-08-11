@@ -6,6 +6,7 @@ const cameraStatus = document.getElementById("cameraStatus");
 const guidance = document.getElementById("liveGuidance");
 const startRecordingButton = document.getElementById("startRecording");
 const finishRecordingButton = document.getElementById("finishRecording");
+const analyzeButton = document.getElementById("analyzeButton");
 const recordingStatus = document.getElementById("recordingStatus");
 const countdownOverlay = document.getElementById("countdownOverlay");
 const trackingUnavailable = document.getElementById("trackingUnavailable");
@@ -83,6 +84,11 @@ let mediaPipeInitializing = false;
 let mediaPipeReady = false;
 let cameraReady = false;
 let trajectories = { Left: [], Right: [], Unknown: [] };
+
+if (analyzeButton) {
+  analyzeButton.disabled = true;
+  analyzeButton.classList.add("opacity-60", "cursor-not-allowed");
+}
 
 function logCv(message) {
   console.info(`[ISYARA CV] ${message}`);
@@ -769,6 +775,10 @@ async function startRecording() {
     recordingStatus.textContent = `Urutan latihan tersimpan (${recordedChunks.length} chunks). Siap untuk analisis akhir.`;
     startRecordingButton.disabled = false;
     finishRecordingButton.disabled = true;
+    if (analyzeButton) {
+      analyzeButton.disabled = false;
+      analyzeButton.classList.remove("opacity-60", "cursor-not-allowed");
+    }
   };
   mediaRecorder.start(250);
   recording = true;

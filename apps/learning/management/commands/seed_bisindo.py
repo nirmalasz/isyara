@@ -1,16 +1,18 @@
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 
-from apps.learning.models import AIReference, Lesson, LessonPart, Sign
+from apps.learning.models import AIReference, LearningModule, Lesson, LessonPart, Sign
 
 
 VOCABULARY = [
     ("Halo", "Sapaan ramah untuk memulai percakapan.", "https://youtu.be/GCFfwXFi6hA?si=hzy9N0q5d7Zddg5h", 0),
     ("Terima Kasih", "Ungkapan sopan untuk menyampaikan rasa terima kasih.", "https://youtu.be/S-2Lj8OzPqQ?si=b77fZz6CIusyuVB1", 0),
     ("Maaf", "Isyarat untuk meminta maaf atau memohon pengertian."),
+    ("Tolong", "Isyarat penting untuk meminta bantuan dengan sopan."),
     ("Nama", "Digunakan saat memperkenalkan nama."),
     ("Saya", "Kata ganti orang pertama untuk merujuk diri sendiri."),
     ("Kamu", "Kata ganti orang kedua saat menyapa lawan bicara."),
+    ("Senang Bertemu", "Ungkapan perkenalan untuk menyampaikan senang bertemu seseorang."),
     ("Aku", "Kata ganti orang pertama informal untuk merujuk diri sendiri."),
     ("Dia", "Kata ganti orang ketiga tunggal untuk merujuk seseorang."),
     ("Kami", "Kata ganti orang pertama jamak, tidak termasuk lawan bicara."),
@@ -42,6 +44,8 @@ DEFAULT_DYNAMIC_WEIGHTS = {
     "timing": 0.10,
     "facial_expression": 0.0,
 }
+
+GENERIC_GUIDED_REFERENCE_SLUGS = {"maaf", "tolong", "nama", "saya", "kamu", "senang-bertemu"}
 
 AI_REFERENCE_CONFIGS = {
     "halo": {
@@ -143,9 +147,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         created = 0
         order = 1
+        modules = self._upsert_modules()
 
         for item in VOCABULARY:
             title, description, youtube_url, start_seconds = self._normalize_seed_item(item)
+            module = self._module_for_title(title, modules)
             created += self._upsert_sign_and_lesson(
                 title=title,
                 category=Sign.CATEGORY_VOCABULARY,
@@ -154,7 +160,8 @@ class Command(BaseCommand):
                 order=order,
                 youtube_url=youtube_url,
                 video_start_seconds=start_seconds,
-                ai_practice_available=True,
+                ai_practice_available=slugify(title) in {"halo", "terima-kasih", "maaf", "tolong", "nama", "saya", "kamu", "senang-bertemu"},
+                module=module,
             )
             order += 1
 
@@ -169,6 +176,7 @@ class Command(BaseCommand):
             video_start_seconds=start_seconds,
             ai_practice_available=True,
             return_lesson=True,
+            module=None,
         )
         created += 1 if was_created else 0
         self._upsert_alphabet_parts(abjad_lesson)
@@ -187,12 +195,64 @@ class Command(BaseCommand):
                 video_start_seconds=0,
                 ai_practice_available=True,
                 slug_override=f"letter-{letter.lower()}",
+                module=None,
             )
             order += 1
 
         self._upsert_ai_references()
 
         self.stdout.write(self.style.SUCCESS(f"Seed complete. {created} lessons created or updated."))
+
+    def _upsert_modules(self):
+        dasar, _ = LearningModule.objects.update_or_create(
+            slug="dasar-bisindo",
+            defaults={
+                "title": "Dasar BISINDO",
+                "description": "Mulai dari sapaan dan ungkapan bantuan yang paling sering dipakai.",
+                "order": 1,
+                "difficulty": "Pemula",
+                "is_active": True,
+            },
+        )
+        perkenalan, _ = LearningModule.objects.update_or_create(
+            slug="perkenalan",
+            defaults={
+                "title": "Perkenalan",
+                "description": "Bangun kalimat pembuka sederhana untuk memperkenalkan diri.",
+                "order": 2,
+                "difficulty": "Pemula",
+                "is_active": True,
+            },
+        )
+        LearningModule.objects.update_or_create(
+            slug="percakapan-sehari-hari",
+            defaults={
+                "title": "Percakapan Sehari-hari",
+                "description": "Materi lanjutan untuk percakapan pendek.",
+                "order": 3,
+                "difficulty": "Menengah",
+                "is_active": True,
+            },
+        )
+        LearningModule.objects.update_or_create(
+            slug="situasi-praktis",
+            defaults={
+                "title": "Situasi Praktis",
+                "description": "Latihan situasi kampus, kerja, dan layanan publik.",
+                "order": 4,
+                "difficulty": "Menengah",
+                "is_active": True,
+            },
+        )
+        return {"dasar-bisindo": dasar, "perkenalan": perkenalan}
+
+    def _module_for_title(self, title, modules):
+        slug = slugify(title)
+        if slug in {"halo", "terima-kasih", "maaf", "tolong"}:
+            return modules["dasar-bisindo"]
+        if slug in {"nama", "saya", "kamu", "senang-bertemu"}:
+            return modules["perkenalan"]
+        return None
 
     def _normalize_seed_item(self, item):
         if len(item) == 2:
@@ -212,6 +272,7 @@ class Command(BaseCommand):
         ai_practice_available=True,
         return_lesson=False,
         slug_override=None,
+        module=None,
     ):
         sign_slug = slug_override or slugify(title)
         sign, _ = Sign.objects.update_or_create(
@@ -228,6 +289,7 @@ class Command(BaseCommand):
             slug=sign_slug,
             defaults={
                 "sign": sign,
+                "module": module,
                 "title": title,
                 "summary": description,
                 "instruction": (
@@ -265,6 +327,23 @@ class Command(BaseCommand):
             )
 
     def _upsert_ai_references(self):
+        generic_config = {
+            "required_hands": ["right"],
+            "active_hand": "right",
+            "uses_face": False,
+            "uses_upper_body": True,
+            "is_dynamic": True,
+            "component_weights": DEFAULT_DYNAMIC_WEIGHTS,
+            "reference_features": {
+                "right": {
+                    "location": {"anchor": "shoulder_midpoint", "x": 0.16, "y": -0.34, "threshold": 0.30},
+                    "finger_angles": {"index_pip": 162, "middle_pip": 160},
+                    "palm_orientation": {"wrist_index_angle": -1.0, "threshold": 0.85},
+                }
+            },
+        }
+        for slug in GENERIC_GUIDED_REFERENCE_SLUGS:
+            AI_REFERENCE_CONFIGS.setdefault(slug, generic_config)
         for slug, config in AI_REFERENCE_CONFIGS.items():
             lesson = Lesson.objects.filter(slug=slug).first()
             if not lesson:

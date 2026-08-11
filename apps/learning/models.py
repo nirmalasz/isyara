@@ -50,6 +50,9 @@ class UserProfile(models.Model):
     profile_photo = models.ImageField(upload_to=profile_photo_upload_path, validators=[validate_profile_photo], blank=True)
     bio = models.TextField(blank=True, max_length=500)
     learning_level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default=LEVEL_BEGINNER)
+    learning_goal = models.CharField(max_length=120, blank=True)
+    bisindo_familiarity = models.CharField(max_length=80, blank=True)
+    onboarding_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -65,6 +68,24 @@ class UserProfile(models.Model):
     @property
     def joined_month(self):
         return timezone.localtime(self.user.date_joined).strftime("%B %Y")
+
+    @property
+    def learning_goal_label(self):
+        return {
+            "daily": "Komunikasi sehari-hari",
+            "deaf_family_friends": "Berkomunikasi dengan keluarga/teman Tuli",
+            "school": "Sekolah atau kampus",
+            "work_service": "Dunia kerja / pelayanan",
+            "self": "Belajar untuk diri sendiri",
+        }.get(self.learning_goal, "Belum diisi")
+
+    @property
+    def bisindo_familiarity_label(self):
+        return {
+            "new": "Belum pernah belajar",
+            "some": "Pernah belajar sedikit",
+            "basic": "Sudah memahami dasar",
+        }.get(self.bisindo_familiarity, "Belum diisi")
 
 
 class Sign(models.Model):
@@ -90,7 +111,23 @@ class Sign(models.Model):
         return self.title
 
 
+class LearningModule(models.Model):
+    title = models.CharField(max_length=160)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    difficulty = models.CharField(max_length=80, blank=True, default="Pemula")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["order", "title"]
+
+    def __str__(self):
+        return self.title
+
+
 class Lesson(models.Model):
+    module = models.ForeignKey(LearningModule, on_delete=models.SET_NULL, related_name="lessons", null=True, blank=True)
     sign = models.OneToOneField(Sign, on_delete=models.CASCADE, related_name="lesson")
     title = models.CharField(max_length=160)
     slug = models.SlugField(unique=True)
@@ -235,12 +272,43 @@ class PracticeSession(models.Model):
         return f"{self.lesson.title} practice ({self.status})"
 
 
+class TranslationHistory(models.Model):
+    DIRECTION_SIGN_TO_SPEECH = "SIGN_TO_SPEECH"
+    DIRECTION_SPEECH_TO_TEXT = "SPEECH_TO_TEXT"
+    DIRECTION_CHOICES = [
+        (DIRECTION_SIGN_TO_SPEECH, "BISINDO ke Suara"),
+        (DIRECTION_SPEECH_TO_TEXT, "Suara ke Teks"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="translation_history")
+    direction = models.CharField(max_length=24, choices=DIRECTION_CHOICES)
+    source_text = models.TextField(blank=True)
+    translated_text = models.TextField()
+    confidence = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.get_direction_display()}: {self.translated_text[:40]}"
+
+    @property
+    def confidence_percent(self):
+        if self.confidence is None:
+            return None
+        value = self.confidence * 100 if self.confidence <= 1 else self.confidence
+        return round(value)
+
+
 class Progress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="progress_records", null=True, blank=True)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="progress_records")
     attempts = models.PositiveIntegerField(default=0)
     best_score = models.PositiveSmallIntegerField(default=0)
+    latest_score = models.PositiveSmallIntegerField(default=0)
     completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
     last_practiced_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:

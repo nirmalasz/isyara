@@ -1,0 +1,726 @@
+{
+  "padding": 0.2,
+  "totals": {
+    "train": 2455,
+    "val": 403,
+    "test": 204
+  },
+  "counts": {
+    "train": {
+      "Anda": 143,
+      "Apa": 153,
+      "Berhenti": 111,
+      "Bodoh": 127,
+      "Cantik": 110,
+      "Halo": 99,
+      "Hati-hati": 111,
+      "Lelah": 103,
+      "Maaf": 124,
+      "Makan": 134,
+      "Mau": 156,
+      "Membaca": 81,
+      "Nama": 104,
+      "Sama-sama": 111,
+      "Saya": 158,
+      "Siapa": 161,
+      "Sombong": 137,
+      "Takut": 189,
+      "Terima-kasih": 143
+    },
+    "val": {
+      "Anda": 24,
+      "Apa": 22,
+      "Berhenti": 17,
+      "Bodoh": 23,
+      "Cantik": 29,
+      "Halo": 18,
+      "Hati-hati": 17,
+      "Lelah": 25,
+      "Maaf": 16,
+      "Makan": 28,
+      "Mau": 23,
+      "Membaca": 10,
+      "Nama": 18,
+      "Sama-sama": 15,
+      "Saya": 24,
+      "Siapa": 26,
+      "Sombong": 19,
+      "Takut": 22,
+      "Terima-kasih": 27
+    },
+    "test": {
+      "Anda": 12,
+      "Apa": 10,
+      "Berhenti": 9,
+      "Bodoh": 15,
+      "Cantik": 14,
+      "Halo": 9,
+      "Hati-hati": 9,
+      "Lelah": 8,
+      "Maaf": 7,
+      "Makan": 15,
+      "Mau": 8,
+      "Membaca": 5,
+      "Nama": 7,
+      "Sama-sama": 9,
+      "Saya": 12,
+      "Siapa": 16,
+      "Sombong": 12,
+      "Takut": 14,
+      "Terima-kasih": 13
+    }
+  },
+  "malformed": [
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-0_jpg.rf.5357e9f127fbaaceea4f3bd63678d954.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-0_jpg.rf.bb84afa4097a67594561b58e9a220000.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-193_jpg.rf.573fff98af21f3c55eea53509247a5c6.txt",
+      "line": "3 0.5390625 0.321875 0.00078125 0.00078125",
+      "reason": "empty_crop"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-677_jpg.rf.778c9fd71b95c3f418699f440e5d8796.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-70_jpg.rf.a859d87007f03cf63819e7372ee18366.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-70_jpg.rf.f6de5b7f9fb422f6a47cf2a541875e42.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-814_jpg.rf.680c84bbad67b514e840a34a77ca842e.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset-2_mp4-814_jpg.rf.fddb088e6e266f5105e0621e83256fe8.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset_mp4-151_jpg.rf.13e63bb8013cb3e1358854ec5b13148b.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/train/labels/Dataset_mp4-151_jpg.rf.15fbe977da786f2b08ccaeff8f6a7000.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/valid/labels/Dataset-2_mp4-1_jpg.rf.e4a2981f61f7549e529d72f704b1e986.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/valid/labels/Dataset-2_mp4-34_jpg.rf.83457463c2c242e04f7f2b60426594d0.txt",
+      "reason": "empty_label"
+    },
+    {
+      "label": "terbisa-3/valid/labels/Dataset_mp4-122_jpg.rf.afc3cb908976a7a2923b397e36539701.txt",
+      "reason": "empty_label"
+    }
+  ],
+  "example_crop_dimensions": [
+    {
+      "width": 538,
+      "height": 294
+    },
+    {
+      "width": 537,
+      "height": 271
+    },
+    {
+      "width": 537,
+      "height": 271
+    },
+    {
+      "width": 478,
+      "height": 221
+    },
+    {
+      "width": 478,
+      "height": 221
+    },
+    {
+      "width": 270,
+      "height": 326
+    },
+    {
+      "width": 260,
+      "height": 301
+    },
+    {
+      "width": 260,
+      "height": 301
+    },
+    {
+      "width": 266,
+      "height": 318
+    },
+    {
+      "width": 266,
+      "height": 318
+    },
+    {
+      "width": 278,
+      "height": 338
+    },
+    {
+      "width": 278,
+      "height": 338
+    },
+    {
+      "width": 301,
+      "height": 437
+    },
+    {
+      "width": 301,
+      "height": 437
+    },
+    {
+      "width": 283,
+      "height": 431
+    },
+    {
+      "width": 208,
+      "height": 249
+    },
+    {
+      "width": 298,
+      "height": 436
+    },
+    {
+      "width": 298,
+      "height": 436
+    },
+    {
+      "width": 290,
+      "height": 402
+    },
+    {
+      "width": 290,
+      "height": 402
+    }
+  ],
+  "classes_with_few_samples": {},
+  "bbox_statistics": {
+    "Apa": {
+      "bbox_width_ratio": {
+        "median": 0.60703125,
+        "min": 0.290625,
+        "max": 0.9984375
+      },
+      "bbox_height_ratio": {
+        "median": 0.303125,
+        "min": 0.13671875,
+        "max": 0.54921875
+      },
+      "bbox_area_ratio": {
+        "median": 0.165985107421875,
+        "min": 0.0886724853515625,
+        "max": 0.324664306640625
+      },
+      "bbox_center_x": {
+        "median": 0.50078125,
+        "min": 0.44375,
+        "max": 0.5875
+      },
+      "bbox_center_y": {
+        "median": 0.7390625,
+        "min": 0.60546875,
+        "max": 0.88671875
+      }
+    },
+    "Anda": {
+      "bbox_width_ratio": {
+        "median": 0.16015625,
+        "min": 0.06796875,
+        "max": 0.25703125
+      },
+      "bbox_height_ratio": {
+        "median": 0.2734375,
+        "min": 0.125,
+        "max": 0.4421875
+      },
+      "bbox_area_ratio": {
+        "median": 0.043925781250000004,
+        "min": 0.00927734375,
+        "max": 0.11305358886718749
+      },
+      "bbox_center_x": {
+        "median": 0.5109375,
+        "min": 0.18828125,
+        "max": 0.88046875
+      },
+      "bbox_center_y": {
+        "median": 0.54375,
+        "min": 0.27578125,
+        "max": 0.79375
+      }
+    },
+    "Bodoh": {
+      "bbox_width_ratio": {
+        "median": 0.1578125,
+        "min": 0.084375,
+        "max": 0.4125
+      },
+      "bbox_height_ratio": {
+        "median": 0.26171875,
+        "min": 0.153125,
+        "max": 0.63125
+      },
+      "bbox_area_ratio": {
+        "median": 0.035384521484375,
+        "min": 0.0159375,
+        "max": 0.24608886718749998
+      },
+      "bbox_center_x": {
+        "median": 0.48359375,
+        "min": 0.21484375,
+        "max": 0.78515625
+      },
+      "bbox_center_y": {
+        "median": 0.31796875,
+        "min": 0.184375,
+        "max": 0.50546875
+      }
+    },
+    "Siapa": {
+      "bbox_width_ratio": {
+        "median": 0.1734375,
+        "min": 0.0765625,
+        "max": 0.28359375
+      },
+      "bbox_height_ratio": {
+        "median": 0.5484375,
+        "min": 0.22890625,
+        "max": 0.7453125
+      },
+      "bbox_area_ratio": {
+        "median": 0.10243652343749998,
+        "min": 0.01949951171875,
+        "max": 0.19386291503906247
+      },
+      "bbox_center_x": {
+        "median": 0.4984375,
+        "min": 0.1671875,
+        "max": 0.8328125
+      },
+      "bbox_center_y": {
+        "median": 0.43046875,
+        "min": 0.34375,
+        "max": 0.7046875
+      }
+    },
+    "Terima-kasih": {
+      "bbox_width_ratio": {
+        "median": 0.165625,
+        "min": 0.1,
+        "max": 0.39296875
+      },
+      "bbox_height_ratio": {
+        "median": 0.34921875,
+        "min": 0.09921875,
+        "max": 0.828125
+      },
+      "bbox_area_ratio": {
+        "median": 0.06290039062500001,
+        "min": 0.013177490234374999,
+        "max": 0.32542724609374996
+      },
+      "bbox_center_x": {
+        "median": 0.5015625,
+        "min": 0.16953125,
+        "max": 0.8421875
+      },
+      "bbox_center_y": {
+        "median": 0.6921875,
+        "min": 0.46953125,
+        "max": 0.821875
+      }
+    },
+    "Mau": {
+      "bbox_width_ratio": {
+        "median": 0.23359375,
+        "min": 0.1265625,
+        "max": 0.44609375
+      },
+      "bbox_height_ratio": {
+        "median": 0.1875,
+        "min": 0.1109375,
+        "max": 0.409375
+      },
+      "bbox_area_ratio": {
+        "median": 0.0494830322265625,
+        "min": 0.0188507080078125,
+        "max": 0.1323333740234375
+      },
+      "bbox_center_x": {
+        "median": 0.4796875,
+        "min": 0.18125,
+        "max": 0.83359375
+      },
+      "bbox_center_y": {
+        "median": 0.74453125,
+        "min": 0.584375,
+        "max": 0.8921875
+      }
+    },
+    "Sombong": {
+      "bbox_width_ratio": {
+        "median": 0.10859375,
+        "min": 0.078125,
+        "max": 0.4015625
+      },
+      "bbox_height_ratio": {
+        "median": 0.48359375,
+        "min": 0.2453125,
+        "max": 0.778125
+      },
+      "bbox_area_ratio": {
+        "median": 0.055310058593749996,
+        "min": 0.0206982421875,
+        "max": 0.3124658203125
+      },
+      "bbox_center_x": {
+        "median": 0.355859375,
+        "min": 0.17578125,
+        "max": 0.82421875
+      },
+      "bbox_center_y": {
+        "median": 0.540625,
+        "min": 0.36015625,
+        "max": 0.6546875
+      }
+    },
+    "Takut": {
+      "bbox_width_ratio": {
+        "median": 0.23515625,
+        "min": 0.12265625,
+        "max": 0.30078125
+      },
+      "bbox_height_ratio": {
+        "median": 0.4,
+        "min": 0.2453125,
+        "max": 0.553125
+      },
+      "bbox_area_ratio": {
+        "median": 0.0910260009765625,
+        "min": 0.038905029296875,
+        "max": 0.1600250244140625
+      },
+      "bbox_center_x": {
+        "median": 0.51015625,
+        "min": 0.178125,
+        "max": 0.821875
+      },
+      "bbox_center_y": {
+        "median": 0.6,
+        "min": 0.28125,
+        "max": 0.73984375
+      }
+    },
+    "Berhenti": {
+      "bbox_width_ratio": {
+        "median": 0.20078125,
+        "min": 0.1109375,
+        "max": 0.30859375
+      },
+      "bbox_height_ratio": {
+        "median": 0.38203125,
+        "min": 0.29609375,
+        "max": 0.55546875
+      },
+      "bbox_area_ratio": {
+        "median": 0.078887939453125,
+        "min": 0.040821533203124996,
+        "max": 0.14884826660156247
+      },
+      "bbox_center_x": {
+        "median": 0.5015625,
+        "min": 0.21640625,
+        "max": 0.78359375
+      },
+      "bbox_center_y": {
+        "median": 0.6125,
+        "min": 0.446875,
+        "max": 0.796875
+      }
+    },
+    "Cantik": {
+      "bbox_width_ratio": {
+        "median": 0.171875,
+        "min": 0.08359375,
+        "max": 0.40234375
+      },
+      "bbox_height_ratio": {
+        "median": 0.509375,
+        "min": 0.24765625,
+        "max": 0.7484375
+      },
+      "bbox_area_ratio": {
+        "median": 0.08801513671875,
+        "min": 0.0259271240234375,
+        "max": 0.301129150390625
+      },
+      "bbox_center_x": {
+        "median": 0.4921875,
+        "min": 0.14765625,
+        "max": 0.8140625
+      },
+      "bbox_center_y": {
+        "median": 0.42578125,
+        "min": 0.29609375,
+        "max": 0.76015625
+      }
+    },
+    "Halo": {
+      "bbox_width_ratio": {
+        "median": 0.1671875,
+        "min": 0.08046875,
+        "max": 0.23359375
+      },
+      "bbox_height_ratio": {
+        "median": 0.337109375,
+        "min": 0.26640625,
+        "max": 0.5859375
+      },
+      "bbox_area_ratio": {
+        "median": 0.05636138916015625,
+        "min": 0.025712280273437502,
+        "max": 0.136871337890625
+      },
+      "bbox_center_x": {
+        "median": 0.33359375,
+        "min": 0.190625,
+        "max": 0.80546875
+      },
+      "bbox_center_y": {
+        "median": 0.53359375,
+        "min": 0.46171875,
+        "max": 0.69453125
+      }
+    },
+    "Hati-hati": {
+      "bbox_width_ratio": {
+        "median": 0.24765625,
+        "min": 0.1875,
+        "max": 0.3984375
+      },
+      "bbox_height_ratio": {
+        "median": 0.21953125,
+        "min": 0.14609375,
+        "max": 0.38671875
+      },
+      "bbox_area_ratio": {
+        "median": 0.0533203125,
+        "min": 0.029104614257812498,
+        "max": 0.154083251953125
+      },
+      "bbox_center_x": {
+        "median": 0.5046875,
+        "min": 0.2140625,
+        "max": 0.7921875
+      },
+      "bbox_center_y": {
+        "median": 0.665625,
+        "min": 0.4828125,
+        "max": 0.85078125
+      }
+    },
+    "Lelah": {
+      "bbox_width_ratio": {
+        "median": 0.43046875,
+        "min": 0.23671875,
+        "max": 0.73046875
+      },
+      "bbox_height_ratio": {
+        "median": 0.2890625,
+        "min": 0.16171875,
+        "max": 0.5015625
+      },
+      "bbox_area_ratio": {
+        "median": 0.12823486328125,
+        "min": 0.046241455078125,
+        "max": 0.27164306640625
+      },
+      "bbox_center_x": {
+        "median": 0.509375,
+        "min": 0.16953125,
+        "max": 0.82578125
+      },
+      "bbox_center_y": {
+        "median": 0.522265625,
+        "min": 0.3203125,
+        "max": 0.75078125
+      }
+    },
+    "Maaf": {
+      "bbox_width_ratio": {
+        "median": 0.171875,
+        "min": 0.09375,
+        "max": 0.2765625
+      },
+      "bbox_height_ratio": {
+        "median": 0.36328125,
+        "min": 0.24296875,
+        "max": 0.6546875
+      },
+      "bbox_area_ratio": {
+        "median": 0.05987548828125,
+        "min": 0.029130859375,
+        "max": 0.16264892578125
+      },
+      "bbox_center_x": {
+        "median": 0.4984375,
+        "min": 0.18984375,
+        "max": 0.81015625
+      },
+      "bbox_center_y": {
+        "median": 0.4140625,
+        "min": 0.2625,
+        "max": 0.66875
+      }
+    },
+    "Makan": {
+      "bbox_width_ratio": {
+        "median": 0.16640625,
+        "min": 0.08984375,
+        "max": 0.3859375
+      },
+      "bbox_height_ratio": {
+        "median": 0.35625,
+        "min": 0.1921875,
+        "max": 0.6546875
+      },
+      "bbox_area_ratio": {
+        "median": 0.052979736328125,
+        "min": 0.0198193359375,
+        "max": 0.18935058593749998
+      },
+      "bbox_center_x": {
+        "median": 0.5015625,
+        "min": 0.06328125,
+        "max": 0.9390625
+      },
+      "bbox_center_y": {
+        "median": 0.390625,
+        "min": 0.22578125,
+        "max": 0.7765625
+      }
+    },
+    "Nama": {
+      "bbox_width_ratio": {
+        "median": 0.1921875,
+        "min": 0.13125,
+        "max": 0.2828125
+      },
+      "bbox_height_ratio": {
+        "median": 0.3171875,
+        "min": 0.20859375,
+        "max": 0.45390625
+      },
+      "bbox_area_ratio": {
+        "median": 0.05775146484375,
+        "min": 0.03814453125,
+        "max": 0.1251788330078125
+      },
+      "bbox_center_x": {
+        "median": 0.515625,
+        "min": 0.1609375,
+        "max": 0.8390625
+      },
+      "bbox_center_y": {
+        "median": 0.5765625,
+        "min": 0.25703125,
+        "max": 0.81015625
+      }
+    },
+    "Sama-sama": {
+      "bbox_width_ratio": {
+        "median": 0.15234375,
+        "min": 0.115625,
+        "max": 0.2046875
+      },
+      "bbox_height_ratio": {
+        "median": 0.215625,
+        "min": 0.1390625,
+        "max": 0.3234375
+      },
+      "bbox_area_ratio": {
+        "median": 0.03139404296875,
+        "min": 0.020098876953125,
+        "max": 0.058687744140625005
+      },
+      "bbox_center_x": {
+        "median": 0.509375,
+        "min": 0.171875,
+        "max": 0.828125
+      },
+      "bbox_center_y": {
+        "median": 0.57265625,
+        "min": 0.45,
+        "max": 0.75078125
+      }
+    },
+    "Saya": {
+      "bbox_width_ratio": {
+        "median": 0.181640625,
+        "min": 0.09765625,
+        "max": 0.26640625
+      },
+      "bbox_height_ratio": {
+        "median": 0.31953125,
+        "min": 0.16875,
+        "max": 0.5296875
+      },
+      "bbox_area_ratio": {
+        "median": 0.048921813964843755,
+        "min": 0.0189971923828125,
+        "max": 0.1109033203125
+      },
+      "bbox_center_x": {
+        "median": 0.46640625,
+        "min": 0.1875,
+        "max": 0.7984375
+      },
+      "bbox_center_y": {
+        "median": 0.7046875,
+        "min": 0.35078125,
+        "max": 0.83671875
+      }
+    },
+    "Membaca": {
+      "bbox_width_ratio": {
+        "median": 0.19453125,
+        "min": 0.1703125,
+        "max": 0.25
+      },
+      "bbox_height_ratio": {
+        "median": 0.271875,
+        "min": 0.21328125,
+        "max": 0.3890625
+      },
+      "bbox_area_ratio": {
+        "median": 0.05331298828125,
+        "min": 0.04119140625,
+        "max": 0.093922119140625
+      },
+      "bbox_center_x": {
+        "median": 0.491796875,
+        "min": 0.178125,
+        "max": 0.85
+      },
+      "bbox_center_y": {
+        "median": 0.621875,
+        "min": 0.41328125,
+        "max": 0.759375
+      }
+    }
+  }
+}
