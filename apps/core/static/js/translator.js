@@ -19,6 +19,7 @@ const speechTranscript = document.getElementById("speechTranscript");
 const recordSpeech = document.getElementById("recordSpeech");
 const stopSpeech = document.getElementById("stopSpeech");
 const copySpeechText = document.getElementById("copySpeechText");
+const speakSpeechText = document.getElementById("speakSpeechText");
 const debugRawPredictions = document.getElementById("debugRawPredictions");
 const debugStablePrediction = document.getElementById("debugStablePrediction");
 const debugSuppression = document.getElementById("debugSuppression");
@@ -598,6 +599,7 @@ restartSignTranslator.addEventListener("click", () => {
 recordSpeech.addEventListener("click", startSpeechRecording);
 stopSpeech.addEventListener("click", () => speechRecorder?.stop());
 copySpeechText.addEventListener("click", () => navigator.clipboard?.writeText(speechTranscript.textContent || ""));
+speakSpeechText?.addEventListener("click", () => speak(speechTranscript.textContent));
 camera.addEventListener("loadedmetadata", syncCanvas);
 window.addEventListener("resize", syncCanvas);
 
