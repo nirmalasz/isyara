@@ -1,7 +1,10 @@
+import json
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import AIReference, Lesson, PracticeSession, Progress, Sign, User, UserProfile
+from .models import AIReference, LearningModule, Lesson, PracticeSession, Progress, Sign, TranslationHistory, User, UserProfile
 from .utils import youtube_video_id_from_url
 
 
@@ -26,7 +29,14 @@ class LearningFlowTests(TestCase):
             description="Sapaan ramah.",
             difficulty=1,
         )
+        self.module = LearningModule.objects.create(
+            title="Dasar BISINDO",
+            slug="dasar-bisindo",
+            description="Materi awal.",
+            order=1,
+        )
         self.lesson = Lesson.objects.create(
+            module=self.module,
             sign=sign,
             title="Halo",
             slug="halo",
@@ -82,9 +92,118 @@ class LearningFlowTests(TestCase):
             HTTP_HOST="localhost",
         )
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("translator"))
         user = User.objects.get(email="baru@example.com")
         self.assertEqual(user.username, "baru@example.com")
         self.assertTrue(UserProfile.objects.filter(user=user).exists())
+
+    def test_login_redirects_returning_user_to_translator(self):
+        response = self.client.post(
+            reverse("login"),
+            {"email": self.user.email, "password": "testpass-12345"},
+            HTTP_HOST="localhost",
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("translator"))
+
+    def test_translator_page_requires_login_and_renders(self):
+        anonymous_response = self.client.get(reverse("translator"), HTTP_HOST="localhost")
+        self.assertEqual(anonymous_response.status_code, 302)
+        self.assertIn(reverse("login"), anonymous_response.url)
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("translator"), HTTP_HOST="localhost")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "ISYARA Translator")
+        self.assertContains(response, 'id="translatorCamera"')
+        self.assertContains(response, "translator.js")
+
+    def test_translation_history_is_user_scoped(self):
+        own_item = TranslationHistory.objects.create(
+            user=self.user,
+            direction=TranslationHistory.DIRECTION_SIGN_TO_SPEECH,
+            source_text="terima_kasih",
+            translated_text="Terima kasih",
+            confidence=0.92,
+        )
+        TranslationHistory.objects.create(
+            user=self.other_user,
+            direction=TranslationHistory.DIRECTION_SPEECH_TO_TEXT,
+            translated_text="Apa kabar?",
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("translation_history"), HTTP_HOST="localhost")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, own_item.translated_text)
+        self.assertNotContains(response, "Apa kabar?")
+
+    def test_users_cannot_delete_other_users_history(self):
+        other_item = TranslationHistory.objects.create(
+            user=self.other_user,
+            direction=TranslationHistory.DIRECTION_SPEECH_TO_TEXT,
+            translated_text="Besok bertemu.",
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("delete_translation_history", kwargs={"history_id": other_item.id}),
+            HTTP_HOST="localhost",
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(TranslationHistory.objects.filter(id=other_item.id).exists())
+
+    def test_predict_sign_without_model_is_honest(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("api_predict_sign"),
+            data={
+                "image": SimpleUploadedFile(
+                    "frame.jpg",
+                    b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xd9",
+                    content_type="image/jpeg",
+                )
+            },
+            HTTP_HOST="localhost",
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "service_unavailable")
+        self.assertIsNone(payload["prediction"])
+
+    def test_predict_sign_requires_image_upload(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("api_predict_sign"),
+            data=json.dumps({"sequence": [[0.0, 0.0, 0.0] for _ in range(30)]}),
+            content_type="application/json",
+            HTTP_HOST="localhost",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["status"], "error")
+
+    def test_onboarding_unlocks_learning_path(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("learning_path"), HTTP_HOST="localhost")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("onboarding"))
+
+        onboarding_response = self.client.post(
+            reverse("onboarding"),
+            {
+                "learning_goal": "daily",
+                "bisindo_familiarity": "new",
+            },
+            HTTP_HOST="localhost",
+        )
+        self.assertEqual(onboarding_response.status_code, 302)
+        self.assertEqual(onboarding_response.url, reverse("learning_path"))
+        self.user.profile.refresh_from_db()
+        self.assertTrue(self.user.profile.onboarding_completed)
+
+        path_response = self.client.get(reverse("learning_path"), HTTP_HOST="localhost")
+        self.assertEqual(path_response.status_code, 200)
+        self.assertContains(path_response, "Jalur Belajar")
+        self.assertContains(path_response, "Halo")
 
     def test_practice_flow_creates_result_and_progress(self):
         self.client.force_login(self.user)
@@ -122,6 +241,9 @@ class LearningFlowTests(TestCase):
         self.assertIsNotNone(session.score)
         self.assertEqual(Progress.objects.count(), 1)
         self.assertEqual(Progress.objects.get().user, self.user)
+        self.assertTrue(Progress.objects.get().completed)
+        self.assertEqual(Progress.objects.get().latest_score, session.score)
+        self.assertIsNotNone(Progress.objects.get().completed_at)
 
         result_response = self.client.get(analyze_response.url, HTTP_HOST="localhost")
         self.assertEqual(result_response.status_code, 200)

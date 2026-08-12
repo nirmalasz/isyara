@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}ISYARA | Belajar BISINDO{% endblock %}
+{% block title %}ISYARA | Translator BISINDO Real-Time{% endblock %}
 {% block content %}
 
 <style>
@@ -44,7 +44,7 @@
     overflow: hidden; /* penting biar zoom video ga bocor keluar rounded corner */
   }
 
-  /* ===== Hero: teks masuk berurutan ===== */
+  /* ===== Hero: teks masuk berurutan, pelan ===== */
   @keyframes fadeUpIn {
     0% { opacity: 0; transform: translateY(22px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -89,7 +89,7 @@
   .feature-card:nth-child(3) { --base-rot: 1deg;     --punch-x: -18px; --punch-rot: -5deg; }
   .feature-card:nth-child(4) { --base-rot: -4deg;    --punch-x: 20px;  --punch-rot: 8deg; }
 
-  /* ===== Card fitur: zig-zag + reveal on scroll ===== */
+  /* ===== Card fitur: zig-zag naik-turun + reveal on scroll ===== */
   .feature-card {
     --entry-y: 28px;
     --zig: 0px;
@@ -169,20 +169,21 @@
 
     <!-- Left: text -->
     <div class="flex flex-col items-start gap-6">
-      <p class="hero-in hero-in-1 text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Belajar BISINDO dengan AI</p>
+
+      <p class="hero-in hero-in-1 text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Translator BISINDO Real-Time</p>
 
       <h1 class="hero-in hero-in-2 max-w-xl text-5xl font-extrabold leading-[1.25] tracking-[-0.96px] text-[#1B1C1B]">
-        Belajar BISINDO. Berlatih Lebih Percaya Diri Bersama ISYARA
+        Percakapan Dua Arah yang Setara, Tanpa Hambatan Bahasa Isyarat
       </h1>
 
       <p class="hero-in hero-in-3 max-w-lg text-lg leading-7 text-[#564146]">
-        ISYARA membantu kamu berlatih Bahasa Isyarat Indonesia dengan analisis gerakan berbasis computer vision, video referensi, dan progres belajar yang mudah dipantau.
+        ISYARA menerjemahkan BISINDO menjadi teks dan suara Indonesia secara real-time, serta mengubah ucapan lawan bicara menjadi teks yang mudah dibaca — siap dipakai di layanan publik, ruang kerja, hingga percakapan sehari-hari.
       </p>
 
       <div class="hero-in hero-in-4 mt-2 flex flex-row items-center gap-4">
-        <a href="{% url 'library' %}"
+        <a href="{% url 'translator' %}"
            class="rounded-full bg-[#A72A5B] px-8 py-3.5 text-sm font-semibold tracking-[0.14px] text-white shadow-sm hover:bg-[#8f2249] transition-colors">
-          Mulai Belajar
+          Mulai Menerjemahkan
         </a>
         <a href="#cara-kerja"
            class="flex items-center gap-2 rounded-full border border-[#8A7176] px-8 py-3.5 text-sm font-semibold tracking-[0.14px] text-[#1B1C1B] hover:bg-slate-50 transition-colors">
@@ -219,23 +220,23 @@
 <div class="marquee-wrapper relative overflow-hidden border-y border-[#2E1810] bg-[#3B2418] py-4">
   <div class="marquee-track">
     <div class="flex flex-nowrap shrink-0 items-center gap-12 pr-12">
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Belajar BISINDO</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Terjemahkan BISINDO</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">waving_hand</span>
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Berlatih Dengan Kamera</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Kamera dan Landmark</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">front_hand</span>
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Koreksi Instan AI</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Teks dan Suara Indonesia</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">pan_tool</span>
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Percaya Diri Berkomunikasi</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Komunikasi Lebih Inklusif</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">back_hand</span>
     </div>
     <div class="flex flex-nowrap shrink-0 items-center gap-12 pr-12" aria-hidden="true">
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Belajar BISINDO</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Terjemahkan BISINDO</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">waving_hand</span>
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Berlatih Dengan Kamera</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Kamera dan Landmark</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">front_hand</span>
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Koreksi Instan AI</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Teks dan Suara Indonesia</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">pan_tool</span>
-      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Percaya Diri Berkomunikasi</span>
+      <span class="marquee-text-metallic text-lg font-extrabold uppercase tracking-wide whitespace-nowrap">Komunikasi Lebih Inklusif</span>
       <span class="material-symbols-outlined text-xl text-[#FFD9E1]/50">back_hand</span>
     </div>
   </div>
@@ -245,25 +246,24 @@
 <section id="cara-kerja" class="relative overflow-hidden mx-auto max-w-6xl px-10 py-24 font-['Poppins']">
 
   <div class="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-
     <div class="feature-card rounded-xl bg-[#C84474] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
-      <h3 class="mb-4 text-2xl italic leading-snug">Mulai Dari <span class="font-bold not-italic">Mana Saja</span></h3>
-      <p class="text-sm leading-6 opacity-90">Akses koleksi video BISINDO terlengkap yang dikurasi khusus untuk memudahkan langkah awalmu.</p>
+      <h3 class="mb-4 text-2xl italic leading-snug">BISINDO ke <span class="font-bold not-italic">Teks</span></h3>
+      <p class="text-sm leading-6 opacity-90">Kamera membaca gerakan tangan secara langsung dan menyajikan hasil terjemahan dalam teks Indonesia yang jelas dan akurat.</p>
     </div>
 
     <div class="feature-card rounded-xl bg-[#FFD0C1] p-8 text-[#7A574C] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
-      <h3 class="mb-4 text-2xl italic leading-snug">Latihan yang Terasa <span class="font-bold not-italic">Nyata</span></h3>
-      <p class="text-sm leading-6 opacity-90">Gunakan kamera perangkatmu untuk berlatih secara interaktif dengan panduan visual yang presisi.</p>
+      <h3 class="mb-4 text-2xl italic leading-snug">Suara yang Bisa <span class="font-bold not-italic">Dibaca</span></h3>
+      <p class="text-sm leading-6 opacity-90">Ucapan lawan bicara diubah menjadi teks besar dan mudah diikuti, sehingga percakapan berjalan dua arah dan setara.</p>
     </div>
 
     <div class="feature-card rounded-xl bg-[#FFD9E1] p-8 text-[#3F001B] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
-      <h3 class="mb-4 text-2xl italic leading-snug">Langsung di Koreksi <span class="font-bold not-italic">AI</span></h3>
-      <p class="text-sm leading-6 opacity-90">Dapatkan umpan balik instan dari teknologi AI kami yang menganalisis setiap detail gerakan tanganmu.</p>
+      <h3 class="mb-4 text-2xl italic leading-snug">Pelacakan Gerakan <span class="font-bold not-italic">AI</span></h3>
+      <p class="text-sm leading-6 opacity-90">Landmark tangan, tubuh, dan wajah dianalisis secara presisi untuk mendukung pengenalan tanda yang lebih andal.</p>
     </div>
 
     <div class="feature-card rounded-xl bg-[#FFDBD0] p-8 text-[#2E150D] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
-      <h3 class="mb-4 text-2xl italic leading-snug">Lihat <span class="font-bold not-italic">Progresmu</span> Melaju</h3>
-      <p class="text-sm leading-6 opacity-90">Pantau perkembangan kemampuanmu melalui analitik mendalam yang memotivasi setiap harinya.</p>
+      <h3 class="mb-4 text-2xl italic leading-snug">Riwayat <span class="font-bold not-italic">Percakapan</span></h3>
+      <p class="text-sm leading-6 opacity-90">Simpan hasil terjemahan penting dengan aman, sehingga percakapan bisa ditinjau dan dijadikan referensi kapan saja.</p>
     </div>
 
   </div>
@@ -280,7 +280,7 @@
       Kenapa ISYARA?
     </h2>
     <p class="mx-auto mt-4 max-w-2xl text-lg leading-7 text-[#564146]">
-      ISYARA lahir dari keinginan membuat belajar BISINDO lebih mudah diakses siapa saja — pelajar, guru, orang tua, hingga siapa pun yang ingin membangun komunikasi lebih inklusif. Dengan bantuan computer vision, kami ingin latihan bahasa isyarat terasa interaktif dan memberi umpan balik nyata, bukan cuma menonton video pasif.
+      ISYARA lahir dari keinginan membuat komunikasi BISINDO lebih mudah diakses siapa saja — teman Tuli, keluarga, pendidik, petugas layanan, dan masyarakat luas. Dengan bantuan computer vision dan AI, kami membangun jembatan komunikasi dua arah yang tetap jujur tentang batasan model saat ini.
     </p>
   </div>
 </section>

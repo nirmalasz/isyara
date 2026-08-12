@@ -1,0 +1,333 @@
+import asyncio
+import json
+from pathlib import Path
+import unittest
+
+from services.assessment_service.assessment_service import main
+from services.assessment_service.assessment_service.config import BISINDO_CLASSIFIER_MODEL_PATH, BISINDO_YOLO_MODEL_PATH
+from services.assessment_service.assessment_service.inference.bisindo_classifier import BisindoYoloClassifier
+from services.assessment_service.assessment_service.inference.bisindo_detector import BisindoYoloDetector, DetectionResult, clean_bisindo_label
+from services.assessment_service.assessment_service.inference.stabilization import PredictionStabilizer
+
+
+TINY_JPEG = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xd9"
+
+
+class FakeUpload:
+    def __init__(self, content_type="image/jpeg", data=TINY_JPEG):
+        self.content_type = content_type
+        self._data = data
+
+    async def read(self):
+        return self._data
+
+
+class FakeDetector:
+    def __init__(self, result):
+        self.result = result
+        self.model_available = True
+
+    def model_info(self):
+        return {
+            "status": "ready",
+            "model_available": True,
+            "model_path": "fake.pt",
+            "class_count": 1,
+            "classes": ["Saya -BISINDO-"],
+            "display_classes": ["Saya"],
+            "model_names": {0: "Saya -BISINDO-"},
+            "device": "cpu",
+            "confidence_threshold": 0.65,
+            "image_size": 640,
+            "error": None,
+        }
+
+    def predict(self, image_bytes):
+        return self.result
+
+
+class FakeSequenceDetector(FakeDetector):
+    def __init__(self, results):
+        self.results = list(results)
+        self.calls = 0
+        self.model_available = True
+
+    def predict(self, image_bytes):
+        result = self.results[self.calls]
+        self.calls += 1
+        return result
+
+
+class AssessmentServiceTests(unittest.TestCase):
+    def test_health_reports_ai_capabilities(self):
+        payload = main.health()
+        self.assertEqual(payload["status"], "ok")
+        self.assertIn("bisindo_yolo_model_available", payload)
+        self.assertIn("bisindo_yolo_class_count", payload)
+
+    def test_model_loading_reads_names_when_weights_exist(self):
+        if not BISINDO_YOLO_MODEL_PATH.exists():
+            self.skipTest("BISINDO YOLO weights are not available locally.")
+        detector = BisindoYoloDetector(model_path=BISINDO_YOLO_MODEL_PATH)
+        detector.load()
+        self.assertTrue(detector.model_available)
+        self.assertEqual(len(detector.names), 19)
+        self.assertEqual(detector.names[0], "Anda -BISINDO-")
+        self.assertEqual(detector.names[18], "Terima kasih -BISINDO-")
+        self.assertEqual(detector.display_names[10], "Mau")
+
+    def test_classifier_loading_reads_names_when_weights_exist(self):
+        if not BISINDO_CLASSIFIER_MODEL_PATH.exists():
+            self.skipTest("BISINDO classifier weights are not available locally.")
+        classifier = BisindoYoloClassifier(model_path=BISINDO_CLASSIFIER_MODEL_PATH)
+        classifier.load()
+        self.assertTrue(classifier.model_available)
+        self.assertEqual(len(classifier.names), 19)
+        self.assertIn("Halo", classifier.names.values())
+        self.assertIn("Terima-kasih", classifier.names.values())
+
+    def test_missing_model_reports_unavailable(self):
+        detector = BisindoYoloDetector(model_path=Path("/tmp/isyara-missing-model.pt"))
+        info = detector.model_info()
+        self.assertEqual(info["status"], "model_unavailable")
+        self.assertFalse(info["model_available"])
+
+    def test_model_info_schema(self):
+        info = main.model_info()
+        for key in ["status", "inference_mode", "active", "detector", "classifier"]:
+            self.assertIn(key, info)
+        self.assertIn(info["inference_mode"], {"classifier", "detector"})
+        self.assertIn("model", info["active"])
+        self.assertIn("task", info["active"])
+
+    def test_predict_sign_rejects_non_image_upload(self):
+        response = asyncio.run(main.predict_sign(FakeUpload(content_type="text/plain", data=b"hello")))
+        self.assertEqual(response.status, "invalid_image")
+        self.assertFalse(response.detected)
+
+    def test_predict_sign_no_detection_schema(self):
+        original = main.bisindo_detector
+        original_classifier = main.bisindo_classifier
+        original_stabilizer = main.prediction_stabilizer
+        fake = FakeDetector(
+            DetectionResult(
+                status="no_detection",
+                detected=False,
+                class_id=None,
+                raw_label=None,
+                display_label=None,
+                confidence=None,
+            )
+        )
+        main.bisindo_detector = fake
+        main.bisindo_classifier = fake
+        main.prediction_stabilizer = PredictionStabilizer(window=4, stable_count=3, release_window=6)
+        try:
+            response = asyncio.run(main.predict_sign(FakeUpload(), frame_id="test-1", mirrored=True))
+        finally:
+            main.bisindo_detector = original
+            main.bisindo_classifier = original_classifier
+            main.prediction_stabilizer = original_stabilizer
+        self.assertEqual(response.status, "no_detection")
+        self.assertFalse(response.detected)
+        self.assertIsNone(response.raw_label)
+        self.assertIsNone(response.display_label)
+        self.assertFalse(response.stable)
+        self.assertFalse(response.suppressed)
+        self.assertEqual(response.frame_id, "test-1")
+
+    def test_roi_bbox_mapping_offsets_crop_coordinates(self):
+        bbox = {"x1": 10, "y1": 20, "x2": 80, "y2": 90}
+        roi = {"x1": 120, "y1": 45, "x2": 320, "y2": 245, "source_width": 640, "source_height": 480}
+        mapped = main._map_roi_bbox_to_source(bbox, roi)
+        self.assertEqual(mapped, {"x1": 130, "y1": 65, "x2": 200, "y2": 135})
+
+    def test_predict_sign_maps_roi_bbox_to_source_frame(self):
+        original = main.bisindo_detector
+        original_classifier = main.bisindo_classifier
+        original_stabilizer = main.prediction_stabilizer
+        fake = FakeDetector(
+            DetectionResult(
+                status="ok",
+                detected=True,
+                class_id=14,
+                raw_label="Saya -BISINDO-",
+                display_label="Saya",
+                confidence=0.91,
+                raw_predictions=[{"class_id": 14, "raw_label": "Saya -BISINDO-", "label": "Saya", "confidence": 0.91}],
+                detections=1,
+                threshold_detections=1,
+                valid_detections=1,
+                bbox={"x1": 10, "y1": 20, "x2": 80, "y2": 90},
+                image_width=200,
+                image_height=200,
+            )
+        )
+        main.bisindo_detector = fake
+        main.bisindo_classifier = fake
+        main.prediction_stabilizer = PredictionStabilizer(window=4, stable_count=3, release_window=6)
+        try:
+            response = asyncio.run(
+                main.predict_sign(
+                    FakeUpload(),
+                    frame_id="roi-1",
+                    mirrored=False,
+                    roi_x1=120,
+                    roi_y1=45,
+                    roi_x2=320,
+                    roi_y2=245,
+                    source_width=640,
+                    source_height=480,
+                    hands_detected=2,
+                    handedness="Left,Right",
+                )
+            )
+        finally:
+            main.bisindo_detector = original
+            main.bisindo_classifier = original_classifier
+            main.prediction_stabilizer = original_stabilizer
+        self.assertEqual(response.bbox, {"x1": 130, "y1": 65, "x2": 200, "y2": 135})
+        self.assertEqual(response.roi["source_width"], 640)
+        self.assertEqual(response.image_width, 640)
+        self.assertEqual(response.image_height, 480)
+        self.assertEqual(response.hands_detected, 2)
+        self.assertEqual(response.handedness, ["Left", "Right"])
+
+    def test_predict_sign_selects_best_multi_candidate_once(self):
+        original = main.bisindo_detector
+        original_classifier = main.bisindo_classifier
+        original_stabilizer = main.prediction_stabilizer
+        fake = FakeSequenceDetector(
+            [
+                DetectionResult(
+                    status="ok",
+                    detected=True,
+                    class_id=5,
+                    raw_label="Halo -BISINDO-",
+                    display_label="Halo",
+                    confidence=0.84,
+                    raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.84}],
+                    detections=1,
+                    threshold_detections=1,
+                    valid_detections=1,
+                    bbox={"x1": 5, "y1": 10, "x2": 70, "y2": 90},
+                ),
+                DetectionResult(
+                    status="ok",
+                    detected=True,
+                    class_id=5,
+                    raw_label="Halo -BISINDO-",
+                    display_label="Halo",
+                    confidence=0.91,
+                    raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.91}],
+                    detections=1,
+                    threshold_detections=1,
+                    valid_detections=1,
+                    bbox={"x1": 8, "y1": 12, "x2": 80, "y2": 95},
+                ),
+                DetectionResult(
+                    status="low_confidence",
+                    detected=False,
+                    class_id=None,
+                    raw_label=None,
+                    display_label=None,
+                    confidence=0.38,
+                    raw_predictions=[{"class_id": 6, "raw_label": "Hati-hati -BISINDO-", "label": "Hati-hati", "confidence": 0.38}],
+                    detections=1,
+                    threshold_detections=0,
+                    valid_detections=1,
+                    rejection_reason="below_confidence_threshold",
+                ),
+            ]
+        )
+        main.bisindo_detector = fake
+        main.bisindo_classifier = fake
+        main.prediction_stabilizer = PredictionStabilizer(window=1, stable_count=1, release_window=3, min_average_confidence=0.65)
+        candidates_json = json.dumps(
+            [
+                {"type": "left", "x1": 100, "y1": 40, "x2": 240, "y2": 200, "source_width": 640, "source_height": 480},
+                {"type": "right", "x1": 360, "y1": 40, "x2": 500, "y2": 200, "source_width": 640, "source_height": 480},
+                {"type": "combined", "x1": 100, "y1": 40, "x2": 500, "y2": 220, "source_width": 640, "source_height": 480},
+            ]
+        )
+        try:
+            response = asyncio.run(
+                main.predict_sign(
+                    image=None,
+                    candidates=[FakeUpload(), FakeUpload(), FakeUpload()],
+                    frame_id="multi-1",
+                    mirrored=False,
+                    hands_detected=2,
+                    handedness="Left,Right",
+                    candidates_json=candidates_json,
+                )
+            )
+        finally:
+            main.bisindo_detector = original
+            main.bisindo_classifier = original_classifier
+            main.prediction_stabilizer = original_stabilizer
+        self.assertTrue(response.accepted)
+        self.assertEqual(response.accepted_prediction, "Halo")
+        self.assertEqual(response.roi_type, "right")
+        self.assertEqual(response.selected_candidate["roi_type"], "right")
+        self.assertEqual(len(response.candidate_predictions), 3)
+        self.assertEqual(response.bbox, {"x1": 368, "y1": 52, "x2": 440, "y2": 135})
+
+    def test_label_mapping_removes_dataset_suffix(self):
+        self.assertEqual(clean_bisindo_label("Anda -BISINDO-"), "Anda")
+        self.assertEqual(clean_bisindo_label("Apa -BISINDO-"), "Apa")
+        self.assertEqual(clean_bisindo_label("Mau-Ingin -BISINDO-"), "Mau")
+        self.assertEqual(clean_bisindo_label("Terima kasih -BISINDO-"), "Terima kasih")
+
+    def test_detector_threshold_is_configurable(self):
+        detector = BisindoYoloDetector(model_path=Path("/tmp/isyara-missing-model.pt"), confidence_threshold=0.82)
+        self.assertEqual(detector.confidence_threshold, 0.82)
+
+    def test_stabilization_requires_repeated_label(self):
+        stabilizer = PredictionStabilizer(window=4, stable_count=3, release_window=6, min_average_confidence=0.65)
+        self.assertFalse(stabilizer.accept("Saya", 0.91))
+        self.assertFalse(stabilizer.accept("Makan", 0.93))
+        self.assertFalse(stabilizer.accept("Saya", 0.92))
+        self.assertTrue(stabilizer.accept("Saya", 0.94))
+
+    def test_stabilization_rejects_mixed_window(self):
+        stabilizer = PredictionStabilizer(window=4, stable_count=3, release_window=6, min_average_confidence=0.65)
+        self.assertFalse(stabilizer.accept("Saya", 0.91))
+        self.assertFalse(stabilizer.accept("Makan", 0.90))
+        self.assertFalse(stabilizer.accept("Saya", 0.92))
+        self.assertFalse(stabilizer.accept("Halo", 0.94))
+
+    def test_stabilization_uses_average_confidence(self):
+        stabilizer = PredictionStabilizer(window=4, stable_count=3, release_window=6, min_average_confidence=0.65)
+        self.assertFalse(stabilizer.accept("Saya", 0.40))
+        self.assertFalse(stabilizer.accept("Saya", 0.45))
+        self.assertFalse(stabilizer.accept("Saya", 0.50))
+
+    def test_stabilization_suppresses_duplicates_until_release(self):
+        stabilizer = PredictionStabilizer(window=4, stable_count=2, release_window=3)
+        self.assertFalse(stabilizer.accept("Saya", 0.91))
+        self.assertTrue(stabilizer.accept("Saya", 0.91))
+        self.assertFalse(stabilizer.accept("Saya", 0.91))
+        self.assertFalse(stabilizer.accept(None, 0))
+        self.assertFalse(stabilizer.accept(None, 0))
+        self.assertFalse(stabilizer.accept(None, 0))
+        self.assertFalse(stabilizer.accept("Saya", 0.91))
+        self.assertTrue(stabilizer.accept("Saya", 0.91))
+
+    def test_stabilization_does_not_repeat_word_held_for_three_seconds(self):
+        stabilizer = PredictionStabilizer(window=4, stable_count=2, release_window=3)
+        self.assertFalse(stabilizer.accept("Saya", 0.91))
+        self.assertTrue(stabilizer.accept("Saya", 0.91))
+        for _ in range(20):
+            self.assertFalse(stabilizer.accept("Saya", 0.91))
+
+    def test_stabilization_accepts_different_stable_class_while_locked(self):
+        stabilizer = PredictionStabilizer(window=4, stable_count=2, release_window=3)
+        self.assertFalse(stabilizer.accept("Hati-hati", 0.91))
+        self.assertTrue(stabilizer.accept("Hati-hati", 0.91))
+        self.assertFalse(stabilizer.accept("Makan", 0.91))
+        self.assertTrue(stabilizer.accept("Makan", 0.91))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -6,3 +6,10 @@ media/
 staticfiles/
 .env
 .DS_Store
+.ultralytics/
+datasets/bisindo/**/*
+!datasets/bisindo/.gitkeep
+!datasets/bisindo/README.md
+services/assessment_service/assessment_service/models/*.pt
+services/assessment_service/assessment_service/models/*.pth
+.env
