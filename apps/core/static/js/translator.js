@@ -43,6 +43,11 @@ const YOLO_CONFIDENCE_THRESHOLD = 0.75;
 const YOLO_REQUEST_INTERVAL_MS = 220;
 const DISPLAY_FRAME_MIRRORED = true;
 const AI_INPUT_MIRRORED = false;
+const LANDMARK_SMOOTHING_ALPHA = Number(window.ISYARA_LANDMARK_SMOOTHING_ALPHA || 0.35);
+const ROI_SMOOTHING_ALPHA = Number(window.ISYARA_ROI_SMOOTHING_ALPHA || 0.35);
+const LANDMARK_STATIONARY_THRESHOLD = Number(window.ISYARA_LANDMARK_STATIONARY_THRESHOLD || 0.012);
+const ROI_CENTER_STATIONARY_THRESHOLD = Number(window.ISYARA_ROI_CENTER_STATIONARY_THRESHOLD || 0.012);
+const ROI_SIZE_STATIONARY_THRESHOLD = Number(window.ISYARA_ROI_SIZE_STATIONARY_THRESHOLD || 0.018);
 const ROI_PADDING = 0.45;
 const ROI_PADDING_BY_TYPE = {
   tight: 0.18,
@@ -65,6 +70,11 @@ let acceptedTokens = [];
 let frameCounter = 0;
 let lastPredictionResult = null;
 let lastTrackingState = null;
+let smoothedHandState = null;
+let lastLandmarkMotionScore = 0;
+let lastPoseState = "no_hand";
+let smoothedRoiState = new Map();
+let lastRoiMotionScore = 0;
 let classifierInputPreviewUrls = new Map();
 let evalSamples = [];
 let evalCaptureRemaining = 0;
@@ -125,7 +135,15 @@ function updateDebug(result, stableLabel = null, suppressed = false) {
     `release=${result.release_misses || 0}`,
     `state=${result.recognition_state || "-"}`,
     `gate=${result.recognition_rejection_reason || "-"}`,
+    `pose=${result.pose_state || "-"}`,
+    `landmark_motion=${Number(result.landmark_motion_score ?? 0).toFixed(4)}`,
+    `roi_motion=${Number(result.roi_motion_score ?? 0).toFixed(4)}`,
     `raw=${result.raw_top1_label || "-"}:${Math.round(Number(result.raw_top1_confidence || 0) * 100)}%`,
+    `raw_top1=${result.raw_top1?.label || "-"}:${Math.round(Number(result.raw_top1?.confidence || 0) * 100)}%`,
+    `smoothed=${result.smoothed_top1?.label || "-"}:${Math.round(Number(result.smoothed_confidence || 0) * 100)}%`,
+    `stable_class=${result.current_stable_class || "-"}`,
+    `switch=${result.switch_candidate || "-"}:${result.switch_confirm_count ?? 0}/${result.switch_confirm_frames ?? "-"}`,
+    `switch_margin=${Math.round(Number(result.switch_margin || 0) * 100)}%`,
     `agg=${Math.round(Number(result.aggregated_confidence || 0) * 100)}%`,
     `history=${(result.recognition_history || []).map((item) => `${item.label}:${Math.round(Number(item.confidence || 0) * 100)}%`).join(">") || "-"}`,
     `agreement=${result.agreement_count ?? 0}/${result.required_count ?? "-"} in ${result.required_window ?? "-"} frames`,
@@ -137,6 +155,11 @@ function updateDebug(result, stableLabel = null, suppressed = false) {
     `masked=${(result.masked_classes || []).join(",") || "-"}`,
     `struct=${Math.round(Number(result.structural_compatibility ?? 0) * 100)}%`,
     `struct_gate=${result.structural_rejection_reason || "-"}`,
+    `handshape=${Math.round(Number(result.geometry_compatibility?.handshape ?? 1) * 100)}%`,
+    `body=${Math.round(Number(result.geometry_compatibility?.body_location ?? 1) * 100)}%`,
+    `two_hand=${Math.round(Number(result.geometry_compatibility?.two_hand_geometry ?? 1) * 100)}%`,
+    `fused=${Math.round(Number(result.fused_confidence ?? result.confidence ?? 0) * 100)}%`,
+    `transcript_append=${result.transcript_append_expected ?? false}`,
     `calibration=${formatCalibrationDebug(result).replaceAll("\n", " | ")}`,
     `frame=${result.frame_id || "-"}`,
     `image=${result.image_width || "-"}x${result.image_height || "-"}`,
@@ -272,7 +295,7 @@ function roundedRect(context, x, y, width, height, radius) {
 
 function localizeHands(timestamp) {
   if (!handLandmarker) return null;
-  return handLandmarker.detectForVideo(camera, timestamp);
+  return smoothHandResults(handLandmarker.detectForVideo(camera, timestamp));
 }
 
 function localizeFace(timestamp) {
@@ -315,7 +338,63 @@ function structuralFeatures(handResults, faceResults) {
     two_hand_distance: handFeatures.length >= 2 ? distance(handFeatures[0].center, handFeatures[1].center) : null,
     hands_close: handFeatures.length >= 2 ? distance(handFeatures[0].center, handFeatures[1].center) < 0.22 : false,
     two_hand_geometry: twoHandGeometry(handFeatures),
+    landmark_motion_score: roundFeature(lastLandmarkMotionScore),
+    roi_motion_score: roundFeature(lastRoiMotionScore),
+    pose_state: lastPoseState,
+    smoothing: {
+      landmark_alpha: LANDMARK_SMOOTHING_ALPHA,
+      roi_alpha: ROI_SMOOTHING_ALPHA,
+      landmark_stationary_threshold: LANDMARK_STATIONARY_THRESHOLD,
+      roi_center_stationary_threshold: ROI_CENTER_STATIONARY_THRESHOLD,
+      roi_size_stationary_threshold: ROI_SIZE_STATIONARY_THRESHOLD,
+    },
   };
+}
+
+function smoothHandResults(results) {
+  const hands = results?.landmarks || [];
+  const handednesses = results?.handednesses || [];
+  if (!hands.length) {
+    smoothedHandState = null;
+    lastLandmarkMotionScore = 0;
+    lastPoseState = "no_hand";
+    return results;
+  }
+  const previous = smoothedHandState;
+  let displacementTotal = 0;
+  let displacementCount = 0;
+  const smoothedLandmarks = hands.map((hand, handIndex) => {
+    const currentHandedness = handednesses[handIndex]?.[0]?.categoryName;
+    const previousHand = previousHandFor(currentHandedness, handIndex);
+    return hand.map((point, landmarkIndex) => {
+      const prev = previousHand?.[landmarkIndex];
+      if (prev) {
+        displacementTotal += distance3d(point, prev);
+        displacementCount += 1;
+      }
+      return prev
+        ? {
+            x: LANDMARK_SMOOTHING_ALPHA * point.x + (1 - LANDMARK_SMOOTHING_ALPHA) * prev.x,
+            y: LANDMARK_SMOOTHING_ALPHA * point.y + (1 - LANDMARK_SMOOTHING_ALPHA) * prev.y,
+            z: LANDMARK_SMOOTHING_ALPHA * (point.z || 0) + (1 - LANDMARK_SMOOTHING_ALPHA) * (prev.z || 0),
+          }
+        : { x: point.x, y: point.y, z: point.z || 0 };
+    });
+  });
+  lastLandmarkMotionScore = displacementCount ? displacementTotal / displacementCount : 1;
+  lastPoseState = lastLandmarkMotionScore < LANDMARK_STATIONARY_THRESHOLD ? "stationary" : "transitioning";
+  smoothedHandState = { landmarks: smoothedLandmarks, handednesses };
+  return { ...results, landmarks: smoothedLandmarks, handednesses };
+}
+
+function previousHandFor(handedness, fallbackIndex) {
+  if (!smoothedHandState?.landmarks?.length) return null;
+  const label = String(handedness || "").toLowerCase();
+  if (label) {
+    const index = (smoothedHandState.handednesses || []).findIndex((items) => String(items?.[0]?.categoryName || "").toLowerCase() === label);
+    if (index >= 0) return smoothedHandState.landmarks[index];
+  }
+  return smoothedHandState.landmarks[fallbackIndex] || null;
 }
 
 function roundFeature(value) {
@@ -346,18 +425,52 @@ function handGeometry(hand) {
   const palmWidth = distance(hand[5], hand[17]);
   const palmHeight = distance(wrist, middleMcp);
   const spread = distance(indexTip, pinkyTip) / Math.max(0.001, palmWidth);
+  const openness = [4, 8, 12, 16, 20].reduce((total, index) => total + distance(wrist, hand[index]), 0) / Math.max(0.001, palmWidth);
   return {
     palm_aspect: roundFeature(palmWidth / Math.max(0.001, palmHeight)),
-    openness: roundFeature(spread),
+    openness: roundFeature(openness),
     rotation: roundFeature(Math.atan2(hand[5].y - hand[17].y, hand[5].x - hand[17].x)),
     wrist_to_index: vector(wrist, indexTip),
     wrist_to_middle: vector(wrist, hand[12]),
+    index_vector: normalizedVector(wrist, indexTip, palmWidth),
+    middle_vector: normalizedVector(wrist, hand[12], palmWidth),
+    thumb_vector: normalizedVector(wrist, hand[4], palmWidth),
     fingertip_spread: roundFeature(spread),
+    finger_angles: {
+      thumb: jointAngle(hand[2], hand[3], hand[4]),
+      index: jointAngle(hand[5], hand[6], hand[8]),
+      middle: jointAngle(hand[9], hand[10], hand[12]),
+      ring: jointAngle(hand[13], hand[14], hand[16]),
+      pinky: jointAngle(hand[17], hand[18], hand[20]),
+    },
+    fingertip_distances: {
+      thumb_index: roundFeature(distance(hand[4], hand[8]) / Math.max(0.001, palmWidth)),
+      index_middle: roundFeature(distance(hand[8], hand[12]) / Math.max(0.001, palmWidth)),
+      middle_ring: roundFeature(distance(hand[12], hand[16]) / Math.max(0.001, palmWidth)),
+      ring_pinky: roundFeature(distance(hand[16], hand[20]) / Math.max(0.001, palmWidth)),
+    },
   };
 }
 
 function vector(a, b) {
   return { x: roundFeature(b.x - a.x), y: roundFeature(b.y - a.y), z: roundFeature((b.z || 0) - (a.z || 0)) };
+}
+
+function normalizedVector(a, b, scale) {
+  const safeScale = Math.max(0.001, scale);
+  return {
+    x: roundFeature((b.x - a.x) / safeScale),
+    y: roundFeature((b.y - a.y) / safeScale),
+    z: roundFeature(((b.z || 0) - (a.z || 0)) / safeScale),
+  };
+}
+
+function jointAngle(a, b, c) {
+  const ab = { x: a.x - b.x, y: a.y - b.y, z: (a.z || 0) - (b.z || 0) };
+  const cb = { x: c.x - b.x, y: c.y - b.y, z: (c.z || 0) - (b.z || 0) };
+  const dot = ab.x * cb.x + ab.y * cb.y + ab.z * cb.z;
+  const mag = Math.max(0.0001, Math.hypot(ab.x, ab.y, ab.z) * Math.hypot(cb.x, cb.y, cb.z));
+  return roundFeature(Math.acos(Math.max(-1, Math.min(1, dot / mag))) / Math.PI);
 }
 
 function bodyDistancesForHand(center, faceBox) {
@@ -402,14 +515,29 @@ function bodyAnchors(faceBox) {
 function twoHandGeometry(hands) {
   if (hands.length < 2) return null;
   const [first, second] = hands;
+  const leftToRight = [...hands].sort((a, b) => a.center.x - b.center.x);
+  const left = leftToRight[0];
+  const right = leftToRight[1];
+  const span = Math.max(first.bounds.x2, second.bounds.x2) - Math.min(first.bounds.x1, second.bounds.x1);
+  const horizontalCrossing = horizontalOverlap(first.bounds, second.bounds) && Math.abs(first.center.y - second.center.y) < 0.18;
+  const labeledLeft = hands.find((hand) => String(hand.handedness || "").toLowerCase().includes("left"));
+  const labeledRight = hands.find((hand) => String(hand.handedness || "").toLowerCase().includes("right"));
+  const handedOrderCrossed = Boolean(labeledLeft && labeledRight && labeledLeft.center.x > labeledRight.center.x);
   return {
     wrist_distance: roundFeature(distance(first.landmarks[0], second.landmarks[0])),
     palm_distance: roundFeature(distance(first.center, second.center)),
     relative_height: roundFeature(first.center.y - second.center.y),
     overlap: boxesOverlap(first.bounds, second.bounds),
     hands_touching: distance(first.center, second.center) < 0.18,
+    horizontal_crossing: horizontalCrossing,
+    handed_order_crossed: handedOrderCrossed,
+    span: roundFeature(span),
     symmetry: roundFeature(1 - Math.min(1, Math.abs(first.center.y - second.center.y) + Math.abs((first.bounds.x2 - first.bounds.x1) - (second.bounds.x2 - second.bounds.x1)))),
   };
+}
+
+function horizontalOverlap(a, b) {
+  return Boolean(a && b && a.x1 < b.x2 && a.x2 > b.x1);
 }
 
 function boxesOverlap(a, b) {
@@ -442,6 +570,10 @@ function primaryFaceBox(faceResults) {
 
 function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function distance3d(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y, (a.z || 0) - (b.z || 0));
 }
 
 function clamp01(value) {
@@ -479,7 +611,61 @@ function handCandidates(results, faceResults) {
       addCandidate(candidates, unionBounds([combined, faceBox]), "combined_face_union", sourceWidth, sourceHeight, hands.length, handedness, "combinedContext");
     }
   }
-  return uniqueCandidates(candidates).slice(0, 6);
+  return smoothRoiCandidates(uniqueCandidates(candidates).slice(0, 6));
+}
+
+function smoothRoiCandidates(candidates) {
+  if (!candidates.length) {
+    smoothedRoiState = new Map();
+    lastRoiMotionScore = 0;
+    return [];
+  }
+  const nextState = new Map();
+  let movementTotal = 0;
+  let movementCount = 0;
+  const smoothed = candidates.map((roi) => {
+    const previous = smoothedRoiState.get(roi.type);
+    if (!previous || previous.sourceWidth !== roi.sourceWidth || previous.sourceHeight !== roi.sourceHeight) {
+      nextState.set(roi.type, roi);
+      return roi;
+    }
+    const motion = roiMotion(previous, roi);
+    movementTotal += motion.score;
+    movementCount += 1;
+    if (motion.center < ROI_CENTER_STATIONARY_THRESHOLD && motion.size < ROI_SIZE_STATIONARY_THRESHOLD) {
+      nextState.set(roi.type, previous);
+      return { ...previous, motion_score: motion.score, pose_state: lastPoseState };
+    }
+    const eased = {
+      ...roi,
+      x1: Math.round(ROI_SMOOTHING_ALPHA * roi.x1 + (1 - ROI_SMOOTHING_ALPHA) * previous.x1),
+      y1: Math.round(ROI_SMOOTHING_ALPHA * roi.y1 + (1 - ROI_SMOOTHING_ALPHA) * previous.y1),
+      x2: Math.round(ROI_SMOOTHING_ALPHA * roi.x2 + (1 - ROI_SMOOTHING_ALPHA) * previous.x2),
+      y2: Math.round(ROI_SMOOTHING_ALPHA * roi.y2 + (1 - ROI_SMOOTHING_ALPHA) * previous.y2),
+      motion_score: motion.score,
+      pose_state: lastPoseState,
+    };
+    nextState.set(roi.type, eased);
+    return eased;
+  });
+  smoothedRoiState = nextState;
+  lastRoiMotionScore = movementCount ? movementTotal / movementCount : 0;
+  if (lastPoseState === "stationary" && lastRoiMotionScore > ROI_CENTER_STATIONARY_THRESHOLD + ROI_SIZE_STATIONARY_THRESHOLD) {
+    lastPoseState = "transitioning";
+  }
+  return smoothed;
+}
+
+function roiMotion(previous, current) {
+  const prevWidth = Math.max(1, previous.sourceWidth || current.sourceWidth || 1);
+  const prevHeight = Math.max(1, previous.sourceHeight || current.sourceHeight || 1);
+  const prevCenter = { x: (previous.x1 + previous.x2) / 2 / prevWidth, y: (previous.y1 + previous.y2) / 2 / prevHeight };
+  const currentCenter = { x: (current.x1 + current.x2) / 2 / prevWidth, y: (current.y1 + current.y2) / 2 / prevHeight };
+  const center = distance(prevCenter, currentCenter);
+  const prevSize = { width: (previous.x2 - previous.x1) / prevWidth, height: (previous.y2 - previous.y1) / prevHeight };
+  const currentSize = { width: (current.x2 - current.x1) / prevWidth, height: (current.y2 - current.y1) / prevHeight };
+  const size = Math.hypot(currentSize.width - prevSize.width, currentSize.height - prevSize.height);
+  return { center, size, score: center + size };
 }
 
 function landmarkBounds(hand) {
@@ -702,6 +888,8 @@ async function predictCameraFrame(timestamp) {
     y2: candidate.roi.y2,
     source_width: candidate.roi.sourceWidth,
     source_height: candidate.roi.sourceHeight,
+    motion_score: candidate.roi.motion_score || 0,
+    pose_state: candidate.roi.pose_state || lastPoseState,
   }))));
   try {
     const response = await fetch("/api/translator/predict-sign/", {
@@ -786,6 +974,7 @@ function handlePrediction(result) {
   const confidence = Number(result.confidence || 0);
   const label = result.stable_prediction || result.display_label || result.label || result.prediction;
   if (result.accepted && result.accepted_prediction) {
+    result.transcript_append_client = true;
     acceptPrediction({
       label: result.accepted_prediction,
       displayText: result.accepted_prediction,
@@ -811,6 +1000,11 @@ function acceptPrediction(result) {
   acceptedTokens.push(result.displayText);
   renderTranscript();
   saveHistory("SIGN_TO_SPEECH", result.label, transcriptSentence(false), result.confidence);
+  console.info("[ISYARA Translator] transcript_append", {
+    label: result.label,
+    confidence: result.confidence,
+    transcript: transcriptSentence(false),
+  });
   return true;
 }
 

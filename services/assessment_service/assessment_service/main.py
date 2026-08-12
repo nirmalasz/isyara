@@ -11,12 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import BISINDO_CLASSIFICATION_CONFIDENCE_THRESHOLD, BISINDO_INFERENCE_MODE, BISINDO_YOLO_CONFIDENCE_THRESHOLD, BISINDO_YOLO_MODEL_PATH
 from .config import BISINDO_HIGH_CONFIDENCE_MATCHES, BISINDO_HIGH_CONFIDENCE_STABLE_MS, BISINDO_HIGH_CONFIDENCE_THRESHOLD, BISINDO_HIGH_CONFIDENCE_WINDOW
 from .config import BISINDO_NORMAL_CONFIDENCE_MATCHES, BISINDO_NORMAL_CONFIDENCE_STABLE_MS, BISINDO_NORMAL_CONFIDENCE_WINDOW
-from .config import BISINDO_RELEASE_WINDOW, BISINDO_STABILIZATION_MATCHES, BISINDO_STABILIZATION_WINDOW, BISINDO_STABLE_DURATION_MS
+from .config import BISINDO_PROBABILITY_SMOOTHING_BETA, BISINDO_RELEASE_WINDOW, BISINDO_STABILIZATION_MATCHES, BISINDO_STABILIZATION_WINDOW, BISINDO_STABLE_DURATION_MS
+from .config import BISINDO_SWITCH_CONFIRM_FRAMES, BISINDO_SWITCH_MARGIN
 from .inference.bisindo_classifier import BisindoYoloClassifier
 from .inference.bisindo_detector import DetectionResult, BisindoYoloDetector
 from .inference.calibration import BisindoCalibration
 from .inference.stabilization import PredictionStabilizer
 from .inference.structured_recognition import TerbisaStructureRecognizer
+from .inference.temporal_smoothing import TemporalProbabilitySmoother
 from .speech.transcription import SpeechTranscriptionService
 
 
@@ -114,10 +116,25 @@ class PredictSignResponse(BaseModel):
     top2_confidence: float | None = None
     structural_compatibility: float | None = None
     structural_rejection_reason: str | None = None
+    geometry_compatibility: dict = Field(default_factory=dict)
+    image_calibrated_confidence: float | None = None
+    fused_confidence: float | None = None
     masked_classes: list[str] = Field(default_factory=list)
     eligible_classes: list[str] = Field(default_factory=list)
     region_votes: list[str] = Field(default_factory=list)
     classifier_debug: dict = Field(default_factory=dict)
+    transcript_append_expected: bool = False
+    landmark_motion_score: float | None = None
+    roi_motion_score: float | None = None
+    pose_state: str | None = None
+    raw_top1: dict | None = None
+    smoothed_top1: dict | None = None
+    smoothed_confidence: float | None = None
+    current_stable_class: str | None = None
+    switch_candidate: str | None = None
+    switch_margin: float | None = None
+    switch_confirm_count: int | None = None
+    switch_confirm_frames: int | None = None
 
 
 class ExtractLandmarksResponse(BaseModel):
@@ -142,6 +159,11 @@ prediction_stabilizer = PredictionStabilizer(
     normal_confidence_window=BISINDO_NORMAL_CONFIDENCE_WINDOW,
     normal_confidence_count=BISINDO_NORMAL_CONFIDENCE_MATCHES,
     normal_confidence_stable_ms=BISINDO_NORMAL_CONFIDENCE_STABLE_MS,
+)
+prediction_smoother = TemporalProbabilitySmoother(
+    beta=BISINDO_PROBABILITY_SMOOTHING_BETA,
+    switch_margin=BISINDO_SWITCH_MARGIN,
+    switch_confirm_frames=BISINDO_SWITCH_CONFIRM_FRAMES,
 )
 speech_transcription = SpeechTranscriptionService()
 
@@ -240,7 +262,9 @@ async def predict_sign(
     structure = _json_object(structure_json)
     if not uploads:
         if hands_detected == 0:
+            prediction_smoother.reset()
             stability = prediction_stabilizer.evaluate(None, 0, timestamp_ms=timestamp_ms)
+            motion_debug = _motion_debug_fields(structure, {})
             return PredictSignResponse(
                 status="no_hand",
                 detected=False,
@@ -274,6 +298,7 @@ async def predict_sign(
                 stable_duration_ms=stability["stable_duration_ms"],
                 recognition_history=stability["history"],
                 structure=structure,
+                **motion_debug,
                 reason="no_hand",
             )
         return PredictSignResponse(
@@ -335,9 +360,13 @@ async def predict_sign(
         payload["candidate_predictions"] = []
         payload["selected_candidate"] = _selected_candidate_payload(payload, roi, "single")
         result, payload = _apply_calibration_to_single_result(result, payload, structure, hands_detected)
-    probabilities = {item["label"]: item.get("calibrated_confidence", item.get("confidence", 0)) for item in payload.get("raw_predictions", [])}
+    result, payload, smoothing = _apply_temporal_smoothing(result, payload, structure)
+    probabilities = smoothing.get("probabilities") or {
+        item["label"]: item.get("calibrated_confidence", item.get("confidence", 0)) for item in payload.get("raw_predictions", [])
+    }
     stability = prediction_stabilizer.evaluate(result.display_label, result.confidence or 0, timestamp_ms=timestamp_ms, probabilities=probabilities)
     raw_top1 = payload.get("raw_predictions", [{}])[0] if payload.get("raw_predictions") else {}
+    motion_debug = _motion_debug_fields(structure, smoothing)
     payload.update(
         {
             "stable": stability["stable"],
@@ -380,10 +409,15 @@ async def predict_sign(
             "top2_confidence": payload.get("top2_confidence"),
             "structural_compatibility": payload.get("structural_compatibility"),
             "structural_rejection_reason": payload.get("structural_rejection_reason"),
+            "geometry_compatibility": payload.get("geometry_compatibility", {}),
+            "image_calibrated_confidence": payload.get("image_calibrated_confidence"),
+            "fused_confidence": payload.get("fused_confidence"),
             "masked_classes": payload.get("masked_classes", []),
             "eligible_classes": payload.get("eligible_classes", []),
             "region_votes": payload.get("region_votes", []),
             "classifier_debug": payload.get("debug", {}),
+            "transcript_append_expected": stability["accepted"],
+            **motion_debug,
         }
     )
     if not DEBUG_DIAGNOSTICS:
@@ -404,6 +438,10 @@ async def predict_sign(
         f"margin={(payload.get('margin') or 0):.2f} threshold={(payload.get('class_threshold') or 0):.2f} top2={payload.get('top2_label') or '-'} "
         f"struct={payload.get('structural_compatibility')} masked={','.join(payload.get('masked_classes', [])[:4]) or '-'} "
         f"stable={payload['stable']} accepted={payload['accepted']} suppressed={payload['suppressed']} gate={payload.get('recognition_rejection_reason') or '-'} "
+        f"transcript_append={payload.get('transcript_append_expected')} "
+        f"pose={payload.get('pose_state') or '-'} raw_top1={(payload.get('raw_top1') or {}).get('label') or '-'} "
+        f"smooth_top1={(payload.get('smoothed_top1') or {}).get('label') or '-'} smooth_conf={(payload.get('smoothed_confidence') or 0):.2f} "
+        f"stable_class={payload.get('current_stable_class') or '-'} switch={payload.get('switch_candidate') or '-'}:{payload.get('switch_confirm_count') or 0} "
         f"agreement={payload.get('agreement_count')}/{payload.get('required_count')} window={payload.get('required_window')} stable_ms={payload.get('required_duration_ms')} duration={payload.get('stable_duration_ms')} "
         f"state={payload.get('recognition_state') or '-'} lock={payload['locked_label'] or '-'} release={payload['release_misses']} "
         f"image={payload.get('image_width')}x{payload.get('image_height')} mode={payload.get('image_mode')} "
@@ -435,6 +473,91 @@ def _candidate_metadata(candidates_json):
     except json.JSONDecodeError:
         return []
     return data if isinstance(data, list) else []
+
+
+def _apply_temporal_smoothing(result, payload, structure=None):
+    smoothing = prediction_smoother.update(payload.get("raw_predictions", []), pose_state=(structure or {}).get("pose_state"))
+    stable_label = smoothing.get("current_stable_class")
+    stable_confidence = smoothing.get("current_stable_confidence")
+    if not stable_label:
+        return result, payload, smoothing
+    best = next((item for item in payload.get("raw_predictions", []) if item.get("label") == stable_label), None)
+    threshold = (best or {}).get("class_threshold", BISINDO_YOLO_CONFIDENCE_THRESHOLD)
+    if stable_confidence is None or stable_confidence < threshold:
+        payload.update(
+            {
+                "detected": False,
+                "display_label": None,
+                "label": None,
+                "prediction": None,
+                "confidence": stable_confidence,
+                "rejection_reason": "below_threshold",
+            }
+        )
+        smoothed = DetectionResult(
+            status="low_confidence",
+            detected=False,
+            class_id=None,
+            raw_label=None,
+            display_label=None,
+            confidence=stable_confidence,
+            latency_ms=payload.get("latency_ms"),
+            raw_predictions=payload.get("raw_predictions", []),
+            detections=payload.get("detections", 1),
+            threshold_detections=0,
+            valid_detections=payload.get("valid_detections", 1),
+            rejection_reason="below_threshold",
+            image_width=payload.get("image_width"),
+            image_height=payload.get("image_height"),
+            image_mode=payload.get("image_mode"),
+            debug=payload.get("debug"),
+        )
+        return smoothed, payload, smoothing
+
+    smoothed = DetectionResult(
+        status="ok",
+        detected=True,
+        class_id=best.get("class_id") if best else payload.get("class_id"),
+        raw_label=best.get("raw_label") if best else stable_label,
+        display_label=stable_label,
+        confidence=stable_confidence,
+        latency_ms=payload.get("latency_ms"),
+        raw_predictions=payload.get("raw_predictions", []),
+        detections=payload.get("detections", 1),
+        threshold_detections=1,
+        valid_detections=payload.get("valid_detections", 1),
+        bbox=payload.get("bbox"),
+        image_width=payload.get("image_width"),
+        image_height=payload.get("image_height"),
+        image_mode=payload.get("image_mode"),
+        debug=payload.get("debug"),
+    )
+    payload.update(
+        {
+            **smoothed.as_dict(),
+            "rejection_reason": None,
+            "calibrated_confidence": stable_confidence,
+            "class_threshold": threshold,
+        }
+    )
+    return smoothed, payload, smoothing
+
+
+def _motion_debug_fields(structure, smoothing):
+    structure = structure or {}
+    return {
+        "landmark_motion_score": structure.get("landmark_motion_score"),
+        "roi_motion_score": structure.get("roi_motion_score"),
+        "pose_state": structure.get("pose_state"),
+        "raw_top1": smoothing.get("raw_top1"),
+        "smoothed_top1": smoothing.get("smoothed_top1"),
+        "smoothed_confidence": smoothing.get("smoothed_confidence"),
+        "current_stable_class": smoothing.get("current_stable_class"),
+        "switch_candidate": smoothing.get("switch_candidate"),
+        "switch_margin": smoothing.get("switch_margin"),
+        "switch_confirm_count": smoothing.get("switch_confirm_count"),
+        "switch_confirm_frames": smoothing.get("switch_confirm_frames"),
+    }
 
 
 def _json_object(raw_json):
@@ -502,6 +625,9 @@ def _apply_calibration_to_single_result(result, payload, structure=None, hands_d
             "top2_confidence": top2.get("calibrated_confidence") if top2 else None,
             "structural_compatibility": best.get("structural_compatibility") if best else None,
             "structural_rejection_reason": best.get("structural_rejection_reason") if best else None,
+            "geometry_compatibility": best.get("geometry_compatibility", {}) if best else {},
+            "image_calibrated_confidence": best.get("image_calibrated_confidence") if best else None,
+            "fused_confidence": best.get("fused_confidence") if best else None,
             "masked_classes": structural["masked_classes"],
             "eligible_classes": structural["eligible_classes"],
             "region_votes": sorted(structural["region_votes"]),
@@ -594,6 +720,9 @@ def _aggregate_candidate_results(candidate_results, structure=None, hands_detect
         "top2_confidence": top2.get("calibrated_confidence") if top2 else None,
         "structural_compatibility": best.get("structural_compatibility"),
         "structural_rejection_reason": best.get("structural_rejection_reason"),
+        "geometry_compatibility": best.get("geometry_compatibility", {}),
+        "image_calibrated_confidence": best.get("image_calibrated_confidence"),
+        "fused_confidence": best.get("fused_confidence"),
         "masked_classes": structural["masked_classes"],
         "eligible_classes": structural["eligible_classes"],
         "region_votes": sorted(structural["region_votes"]),

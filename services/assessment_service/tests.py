@@ -10,6 +10,7 @@ from services.assessment_service.assessment_service.inference.calibration import
 from services.assessment_service.assessment_service.inference.bisindo_detector import BisindoYoloDetector, DetectionResult, clean_bisindo_label
 from services.assessment_service.assessment_service.inference.stabilization import PredictionStabilizer
 from services.assessment_service.assessment_service.inference.structured_recognition import TerbisaStructureRecognizer
+from services.assessment_service.assessment_service.inference.temporal_smoothing import TemporalProbabilitySmoother
 
 
 TINY_JPEG = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xd9"
@@ -61,6 +62,9 @@ class FakeSequenceDetector(FakeDetector):
 
 
 class AssessmentServiceTests(unittest.TestCase):
+    def setUp(self):
+        main.prediction_smoother.reset()
+
     def test_health_reports_ai_capabilities(self):
         payload = main.health()
         self.assertEqual(payload["status"], "ok")
@@ -270,6 +274,7 @@ class AssessmentServiceTests(unittest.TestCase):
             main.prediction_stabilizer = original_stabilizer
         self.assertTrue(response.accepted)
         self.assertEqual(response.accepted_prediction, "Halo")
+        self.assertTrue(response.transcript_append_expected)
         self.assertEqual(response.roi_type, "right")
         self.assertEqual(response.selected_candidate["roi_type"], "right")
         self.assertEqual(len(response.candidate_predictions), 3)
@@ -404,6 +409,79 @@ class AssessmentServiceTests(unittest.TestCase):
                 accepted.append(result["stable_label"])
         self.assertEqual(accepted, ["Saya", "Saya"])
 
+    def test_probability_smoothing_keeps_stationary_label_over_noisy_top1(self):
+        smoother = TemporalProbabilitySmoother(beta=0.25, switch_margin=0.10, switch_confirm_frames=2)
+        sequence = [
+            [{"label": "Saya", "calibrated_confidence": 0.76}, {"label": "Membaca", "calibrated_confidence": 0.20}],
+            [{"label": "Membaca", "calibrated_confidence": 0.58}, {"label": "Saya", "calibrated_confidence": 0.55}],
+            [{"label": "Saya", "calibrated_confidence": 0.79}, {"label": "Membaca", "calibrated_confidence": 0.18}],
+            [{"label": "Anda", "calibrated_confidence": 0.57}, {"label": "Saya", "calibrated_confidence": 0.56}],
+            [{"label": "Saya", "calibrated_confidence": 0.81}, {"label": "Membaca", "calibrated_confidence": 0.16}],
+        ]
+        outputs = [smoother.update(predictions, pose_state="stationary") for predictions in sequence]
+        self.assertEqual(outputs[-1]["current_stable_class"], "Saya")
+        self.assertEqual(outputs[-1]["smoothed_top1"]["label"], "Saya")
+
+    def test_probability_hysteresis_requires_confirmed_switch(self):
+        smoother = TemporalProbabilitySmoother(beta=0.5, switch_margin=0.10, switch_confirm_frames=2)
+        smoother.update([{"label": "Saya", "calibrated_confidence": 0.85}, {"label": "Membaca", "calibrated_confidence": 0.10}])
+        slight = smoother.update([{"label": "Membaca", "calibrated_confidence": 0.86}, {"label": "Saya", "calibrated_confidence": 0.82}], pose_state="stationary")
+        self.assertEqual(slight["current_stable_class"], "Saya")
+        first_strong = smoother.update([{"label": "Membaca", "calibrated_confidence": 0.98}, {"label": "Saya", "calibrated_confidence": 0.40}])
+        self.assertEqual(first_strong["current_stable_class"], "Saya")
+        second_strong = smoother.update([{"label": "Membaca", "calibrated_confidence": 0.98}, {"label": "Saya", "calibrated_confidence": 0.30}])
+        self.assertEqual(second_strong["current_stable_class"], "Saya")
+        third_strong = smoother.update([{"label": "Membaca", "calibrated_confidence": 0.98}, {"label": "Saya", "calibrated_confidence": 0.30}])
+        self.assertEqual(third_strong["current_stable_class"], "Membaca")
+
+    def test_probability_smoothing_repeated_and_jitter_for_all_classes(self):
+        labels = [
+            "Anda",
+            "Apa",
+            "Berhenti",
+            "Bodoh",
+            "Cantik",
+            "Halo",
+            "Hati-hati",
+            "Lelah",
+            "Maaf",
+            "Makan",
+            "Mau",
+            "Membaca",
+            "Nama",
+            "Sama-sama",
+            "Saya",
+            "Siapa",
+            "Sombong",
+            "Takut",
+            "Terima kasih",
+        ]
+        for index, label in enumerate(labels):
+            distractor = labels[(index + 1) % len(labels)]
+            with self.subTest(label=label):
+                smoother = TemporalProbabilitySmoother(beta=0.25, switch_margin=0.10, switch_confirm_frames=2)
+                for _ in range(20):
+                    result = smoother.update(
+                        [
+                            {"label": label, "calibrated_confidence": 0.86},
+                            {"label": distractor, "calibrated_confidence": 0.42},
+                        ],
+                        pose_state="stationary",
+                    )
+                self.assertEqual(result["current_stable_class"], label)
+
+                for frame in range(20):
+                    target_confidence = 0.82 + (0.03 if frame % 2 == 0 else -0.03)
+                    distractor_confidence = 0.76 + (0.04 if frame % 5 == 0 else -0.02)
+                    result = smoother.update(
+                        [
+                            {"label": distractor, "calibrated_confidence": distractor_confidence},
+                            {"label": label, "calibrated_confidence": target_confidence},
+                        ],
+                        pose_state="stationary",
+                    )
+                self.assertEqual(result["current_stable_class"], label)
+
     def test_calibration_rejects_low_margin(self):
         calibration = BisindoCalibration()
         predictions = calibration.calibrate_predictions(
@@ -446,6 +524,46 @@ class AssessmentServiceTests(unittest.TestCase):
         result = recognizer.apply([{"label": "Membaca", "confidence": 0.99, "calibrated_confidence": 0.99}], structure={"hands_detected": 2}, hands_detected=2)
         self.assertNotIn("Membaca", result["masked_classes"])
         self.assertEqual(result["predictions"][0]["calibrated_confidence"], 0.99)
+
+    def test_structure_reranks_takut_over_lelah_for_crossed_two_hand_geometry(self):
+        recognizer = TerbisaStructureRecognizer()
+        structure = {
+            "hands_detected": 2,
+            "hands": [
+                {"body_region": "chest", "finger_states": {"thumb": True, "index": True, "middle": True, "ring": True, "pinky": True}, "geometry": {"openness": 5.0}},
+                {"body_region": "chest", "finger_states": {"thumb": True, "index": True, "middle": True, "ring": True, "pinky": True}, "geometry": {"openness": 5.0}},
+            ],
+            "two_hand_geometry": {"horizontal_crossing": True, "overlap": True, "hands_touching": True, "palm_distance": 0.14, "span": 0.36},
+        }
+        result = recognizer.apply(
+            [
+                {"label": "Lelah", "confidence": 0.72, "calibrated_confidence": 0.72},
+                {"label": "Takut", "confidence": 0.70, "calibrated_confidence": 0.70},
+            ],
+            structure=structure,
+            hands_detected=2,
+        )
+        self.assertEqual(result["predictions"][0]["label"], "Takut")
+
+    def test_structure_reranks_lelah_over_takut_for_separated_two_hand_geometry(self):
+        recognizer = TerbisaStructureRecognizer()
+        structure = {
+            "hands_detected": 2,
+            "hands": [
+                {"body_region": "chest", "finger_states": {"thumb": True, "index": True, "middle": True, "ring": True, "pinky": True}, "geometry": {"openness": 5.0}},
+                {"body_region": "chest", "finger_states": {"thumb": True, "index": True, "middle": True, "ring": True, "pinky": True}, "geometry": {"openness": 5.0}},
+            ],
+            "two_hand_geometry": {"horizontal_crossing": False, "overlap": False, "hands_touching": False, "palm_distance": 0.38, "span": 0.62},
+        }
+        result = recognizer.apply(
+            [
+                {"label": "Takut", "confidence": 0.72, "calibrated_confidence": 0.72},
+                {"label": "Lelah", "confidence": 0.70, "calibrated_confidence": 0.70},
+            ],
+            structure=structure,
+            hands_detected=2,
+        )
+        self.assertEqual(result["predictions"][0]["label"], "Lelah")
 
     def test_one_hand_membaca_top1_cannot_survive_predict_sign(self):
         original = main.bisindo_detector
