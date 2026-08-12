@@ -1,0 +1,30 @@
+names:
+- Anda -BISINDO-
+- Apa -BISINDO-
+- Berhenti -BISINDO-
+- Bodoh -BISINDO-
+- Cantik -BISINDO-
+- Halo -BISINDO-
+- Hati-hati -BISINDO-
+- Lelah -BISINDO-
+- Maaf -BISINDO-
+- Makan -BISINDO-
+- Mau-Ingin -BISINDO-
+- Membaca -BISINDO-
+- Nama -BISINDO-
+- Sama-sama -BISINDO-
+- Saya -BISINDO-
+- Siapa -BISINDO-
+- Sombong -BISINDO-
+- Takut -BISINDO-
+- Terima kasih -BISINDO-
+nc: 19
+roboflow:
+  license: MIT
+  project: terbisa
+  url: https://universe.roboflow.com/jonathan-toga-sihotang/terbisa/dataset/1
+  version: 1
+  workspace: jonathan-toga-sihotang
+test: ../test/images
+train: ../train/images
+val: ../valid/images
