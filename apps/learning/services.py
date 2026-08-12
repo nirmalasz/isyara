@@ -112,3 +112,69 @@ class AssessmentClient:
             "status": "Wajib" if "left" in required_hands else "Tidak wajib",
         }
         return components
+
+
+class TranslatorAIClient:
+    def _service_url(self):
+        return settings.ASSESSMENT_SERVICE_URL.rstrip("/") if settings.ASSESSMENT_SERVICE_URL else ""
+
+    def predict_sign(self, image_file=None, metadata=None, candidate_files=None):
+        service_url = self._service_url()
+        if not service_url:
+            return {
+                "status": "service_unavailable",
+                "detected": False,
+                "class_id": None,
+                "label": None,
+                "prediction": None,
+                "display_text": "Layanan penerjemah belum tersambung.",
+                "confidence": None,
+            }
+        files = []
+        if candidate_files:
+            for candidate_file in candidate_files:
+                candidate_file.seek(0)
+                files.append(
+                    (
+                        "candidates",
+                        (
+                            candidate_file.name or "candidate-frame.jpg",
+                            candidate_file.read(),
+                            getattr(candidate_file, "content_type", "image/jpeg"),
+                        ),
+                    )
+                )
+        elif image_file:
+            image_file.seek(0)
+            files.append(
+                (
+                    "image",
+                    (
+                        image_file.name or "frame.jpg",
+                        image_file.read(),
+                        getattr(image_file, "content_type", "image/jpeg"),
+                    ),
+                )
+            )
+        response = requests.post(
+            f"{service_url}/predict-sign",
+            files=files,
+            data=metadata or {},
+            timeout=8,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def transcribe(self, audio_file):
+        service_url = self._service_url()
+        if not service_url:
+            return {
+                "status": "transcription_unavailable",
+                "language": "id",
+                "text": "",
+                "message": "Model transkripsi sedang disiapkan.",
+            }
+        files = {"audio": (audio_file.name or "audio.webm", audio_file.read(), getattr(audio_file, "content_type", "audio/webm"))}
+        response = requests.post(f"{service_url}/transcribe", files=files, timeout=30)
+        response.raise_for_status()
+        return response.json()

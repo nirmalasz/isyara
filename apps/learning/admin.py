@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import AIReference, Lesson, LessonPart, PracticeSession, Progress, Sign, User, UserProfile
+from .models import AIReference, LearningModule, Lesson, LessonPart, PracticeSession, Progress, Sign, TranslationHistory, User, UserProfile
 
 
 @admin.register(User)
@@ -24,10 +24,18 @@ class SignAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
 
 
+@admin.register(LearningModule)
+class LearningModuleAdmin(admin.ModelAdmin):
+    list_display = ("title", "order", "difficulty", "is_active")
+    list_filter = ("is_active", "difficulty")
+    prepopulated_fields = {"slug": ("title",)}
+    search_fields = ("title", "description")
+
+
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ("title", "sign", "order", "estimated_minutes", "youtube_video_id", "ai_practice_available")
-    list_filter = ("ai_practice_available", "region")
+    list_display = ("title", "module", "sign", "order", "estimated_minutes", "youtube_video_id", "ai_practice_available")
+    list_filter = ("module", "ai_practice_available", "region")
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ("title", "summary", "instruction", "youtube_url", "source_channel")
 
@@ -56,3 +64,10 @@ class PracticeSessionAdmin(admin.ModelAdmin):
 class ProgressAdmin(admin.ModelAdmin):
     list_display = ("lesson", "user", "attempts", "best_score", "completed", "last_practiced_at")
     list_filter = ("completed",)
+
+
+@admin.register(TranslationHistory)
+class TranslationHistoryAdmin(admin.ModelAdmin):
+    list_display = ("user", "direction", "translated_text", "confidence", "created_at")
+    list_filter = ("direction",)
+    search_fields = ("user__email", "user__display_name", "source_text", "translated_text")

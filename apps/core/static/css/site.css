@@ -67,8 +67,8 @@ textarea:focus-visible {
 }
 
 .tracking-pill.ok {
-  background: #ccfbf1;
-  color: #115e59;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
 }
 
 .tracking-pill.warn {
@@ -82,8 +82,8 @@ textarea:focus-visible {
 }
 
 .guidance-line.ok {
-  border-color: #0f766e;
-  color: #115e59;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .guidance-line.warn {
@@ -98,7 +98,7 @@ textarea:focus-visible {
 .progress-ring {
   background:
     radial-gradient(circle at center, #fff 58%, transparent 59%),
-    conic-gradient(#0f766e var(--value), #e2e8f0 0);
+    conic-gradient(var(--color-primary) var(--value), #e2e8f0 0);
 }
 
 .material-symbols-outlined {
