@@ -5,15 +5,13 @@ import torch
 def main():
     if torch.cuda.is_available():
         print(f"GPU Detected: {torch.cuda.get_device_name(0)}")
-    else:
-        print("WARNING: GPU not detected. Training will be extremely slow on CPU.")
 
     rf = Roboflow(api_key="0dvUVaFLO4ckwVqPqhio")
     project = rf.workspace("jonathan-toga-sihotang").project("terbisa")
     
-    dataset = project.version(1).download("yolov8")
+    dataset = project.version(1).download("yolov11")
     
-    model = YOLO("yolov8n.pt")
+    model = YOLO("yolo11n.pt")
 
     
     print("Starting training...")
@@ -26,7 +24,7 @@ def main():
         workers=8,
         device=0, 
         project="isyara_ai",
-        name="terbisa_translator_50ep"
+        name="terbisa_translator_50ep_yolo11"
     )
 
     print("\nTraining Complete!")

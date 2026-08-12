@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 import cv2
 
-model = YOLO("runs/detect/isyara_ai/terbisa_translator_50ep/weights/best.pt")
+model = YOLO("runs/detect/isyara_ai/terbisa_translator_50ep_yolo11/weights/best.pt")
 
 cap = cv2.VideoCapture(0)
 
