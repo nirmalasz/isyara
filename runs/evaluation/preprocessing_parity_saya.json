@@ -1,0 +1,309 @@
+{
+  "image": "datasets/terbisa-cls-v2/test/Saya/Dataset-2_mp4-943_jpg.rf.08039070e01b45f4320d71d4bae8580b_0_medium_eval.jpg",
+  "direct_top5": [
+    {
+      "class_id": 14,
+      "raw_label": "Saya",
+      "label": "Saya",
+      "confidence": 0.999574601650238
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.00014793900481890887
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 5.615972258965485e-05
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 4.982949758414179e-05
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 4.26143997174222e-05
+    }
+  ],
+  "jpeg_88_top5": [
+    {
+      "class_id": 14,
+      "raw_label": "Saya",
+      "label": "Saya",
+      "confidence": 0.9997746348381042
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 6.312460027402267e-05
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 3.467539863777347e-05
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 3.1383995519718155e-05
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 2.7400221370044164e-05
+    }
+  ],
+  "jpeg_95_top5": [
+    {
+      "class_id": 14,
+      "raw_label": "Saya",
+      "label": "Saya",
+      "confidence": 0.999622106552124
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.00013405780191533267
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 4.998598524252884e-05
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 4.349966911831871e-05
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 3.99509008275345e-05
+    }
+  ],
+  "png_top5": [
+    {
+      "class_id": 14,
+      "raw_label": "Saya",
+      "label": "Saya",
+      "confidence": 0.999574601650238
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.00014793900481890887
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 5.615972258965485e-05
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 4.982949758414179e-05
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 4.26143997174222e-05
+    }
+  ],
+  "fastapi_top5": [
+    {
+      "class_id": 14,
+      "raw_label": "Saya",
+      "label": "Saya",
+      "confidence": 0.999574601650238,
+      "calibrated_confidence": 1.0,
+      "class_threshold": 0.95,
+      "prior_correction": 1.0213,
+      "image_calibrated_confidence": 1.0,
+      "structural_compatibility": 1.0,
+      "fused_confidence": 1.0,
+      "structural_rejection_reason": null,
+      "required_hands": 1,
+      "recommended_roi": [
+        "hand_context",
+        "upper_body"
+      ]
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.00014793900481890887,
+      "calibrated_confidence": 0.00014793900481890887,
+      "class_threshold": 0.95,
+      "prior_correction": 1.0,
+      "image_calibrated_confidence": 0.00014793900481890887,
+      "structural_compatibility": 1.0,
+      "fused_confidence": 0.00014793900481890887,
+      "structural_rejection_reason": null,
+      "required_hands": 1,
+      "recommended_roi": [
+        "hand_context",
+        "upper_body"
+      ]
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 5.615972258965485e-05,
+      "calibrated_confidence": 6.289888930041344e-05,
+      "class_threshold": 0.8953,
+      "prior_correction": 1.12,
+      "image_calibrated_confidence": 6.289888930041344e-05,
+      "structural_compatibility": 1.0,
+      "fused_confidence": 6.289888930041344e-05,
+      "structural_rejection_reason": null,
+      "required_hands": 1,
+      "recommended_roi": [
+        "hand_face_context"
+      ]
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 4.982949758414179e-05,
+      "calibrated_confidence": 5.080615573679097e-05,
+      "class_threshold": 0.937,
+      "prior_correction": 1.0196,
+      "image_calibrated_confidence": 5.080615573679097e-05,
+      "structural_compatibility": 1.0,
+      "fused_confidence": 5.080615573679097e-05,
+      "structural_rejection_reason": null,
+      "required_hands": 1,
+      "recommended_roi": [
+        "hand_context",
+        "upper_body"
+      ]
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 4.26143997174222e-05,
+      "calibrated_confidence": 3.917967910019797e-05,
+      "class_threshold": 0.95,
+      "prior_correction": 0.9194,
+      "image_calibrated_confidence": 3.917967910019797e-05,
+      "structural_compatibility": 1.0,
+      "fused_confidence": 3.917967910019797e-05,
+      "structural_rejection_reason": null,
+      "required_hands": 1,
+      "recommended_roi": [
+        "hand_face_context"
+      ]
+    }
+  ],
+  "fastapi_debug": {
+    "exact_input_path": "runs/live_debug/1786515248621_parity_single.jpg",
+    "decoded_rgb_path": "runs/live_debug/1786515248621_parity_single_decoded.jpg",
+    "roi_type": "single",
+    "frame_id": "parity",
+    "full_frame_dimensions": {
+      "width": 0,
+      "height": 0
+    },
+    "roi": null,
+    "hands_detected": 1,
+    "handedness": [],
+    "mirrored": false,
+    "expected_display_orientation": "classifier_input_not_mirrored",
+    "content_type": "image/jpeg",
+    "input_bytes": 24755,
+    "source_size": {
+      "width": 270,
+      "height": 435
+    },
+    "image_mode": "RGB",
+    "classifier_image_size": 224,
+    "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+    "top5_original": [
+      {
+        "class_id": 14,
+        "raw_label": "Saya",
+        "label": "Saya",
+        "confidence": 0.999574601650238
+      },
+      {
+        "class_id": 13,
+        "raw_label": "Sama-sama",
+        "label": "Sama-sama",
+        "confidence": 0.00014793900481890887
+      },
+      {
+        "class_id": 4,
+        "raw_label": "Cantik",
+        "label": "Cantik",
+        "confidence": 5.615972258965485e-05
+      },
+      {
+        "class_id": 18,
+        "raw_label": "Terima-kasih",
+        "label": "Terima kasih",
+        "confidence": 4.982949758414179e-05
+      },
+      {
+        "class_id": 9,
+        "raw_label": "Makan",
+        "label": "Makan",
+        "confidence": 4.26143997174222e-05
+      }
+    ],
+    "top5_flipped": [
+      {
+        "class_id": 14,
+        "raw_label": "Saya",
+        "label": "Saya",
+        "confidence": 0.9998406171798706
+      },
+      {
+        "class_id": 13,
+        "raw_label": "Sama-sama",
+        "label": "Sama-sama",
+        "confidence": 0.0001363105548080057
+      },
+      {
+        "class_id": 7,
+        "raw_label": "Lelah",
+        "label": "Lelah",
+        "confidence": 4.632086074707331e-06
+      },
+      {
+        "class_id": 4,
+        "raw_label": "Cantik",
+        "label": "Cantik",
+        "confidence": 4.491254912863951e-06
+      },
+      {
+        "class_id": 16,
+        "raw_label": "Sombong",
+        "label": "Sombong",
+        "confidence": 4.436462859302992e-06
+      }
+    ]
+  }
+}

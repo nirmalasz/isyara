@@ -6,8 +6,10 @@ import unittest
 from services.assessment_service.assessment_service import main
 from services.assessment_service.assessment_service.config import BISINDO_CLASSIFIER_MODEL_PATH, BISINDO_YOLO_MODEL_PATH
 from services.assessment_service.assessment_service.inference.bisindo_classifier import BisindoYoloClassifier
+from services.assessment_service.assessment_service.inference.calibration import BisindoCalibration
 from services.assessment_service.assessment_service.inference.bisindo_detector import BisindoYoloDetector, DetectionResult, clean_bisindo_label
 from services.assessment_service.assessment_service.inference.stabilization import PredictionStabilizer
+from services.assessment_service.assessment_service.inference.structured_recognition import TerbisaStructureRecognizer
 
 
 TINY_JPEG = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xd9"
@@ -153,8 +155,8 @@ class AssessmentServiceTests(unittest.TestCase):
                 class_id=14,
                 raw_label="Saya -BISINDO-",
                 display_label="Saya",
-                confidence=0.91,
-                raw_predictions=[{"class_id": 14, "raw_label": "Saya -BISINDO-", "label": "Saya", "confidence": 0.91}],
+                confidence=0.99,
+                raw_predictions=[{"class_id": 14, "raw_label": "Saya -BISINDO-", "label": "Saya", "confidence": 0.99}],
                 detections=1,
                 threshold_detections=1,
                 valid_detections=1,
@@ -205,8 +207,8 @@ class AssessmentServiceTests(unittest.TestCase):
                     class_id=5,
                     raw_label="Halo -BISINDO-",
                     display_label="Halo",
-                    confidence=0.84,
-                    raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.84}],
+                    confidence=0.97,
+                    raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.97}],
                     detections=1,
                     threshold_detections=1,
                     valid_detections=1,
@@ -218,8 +220,8 @@ class AssessmentServiceTests(unittest.TestCase):
                     class_id=5,
                     raw_label="Halo -BISINDO-",
                     display_label="Halo",
-                    confidence=0.91,
-                    raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.91}],
+                    confidence=0.99,
+                    raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.99}],
                     detections=1,
                     threshold_detections=1,
                     valid_detections=1,
@@ -327,6 +329,167 @@ class AssessmentServiceTests(unittest.TestCase):
         self.assertTrue(stabilizer.accept("Hati-hati", 0.91))
         self.assertFalse(stabilizer.accept("Makan", 0.91))
         self.assertTrue(stabilizer.accept("Makan", 0.91))
+
+    def test_default_stabilization_requires_three_of_five_and_duration(self):
+        stabilizer = PredictionStabilizer()
+        result = None
+        for timestamp in [100, 250, 400]:
+            result = stabilizer.evaluate("Halo", 0.98, timestamp_ms=timestamp, probabilities={"Halo": 0.98})
+        self.assertTrue(result["accepted"])
+        self.assertEqual(result["agreement_count"], 3)
+        self.assertEqual(result["required_count"], 3)
+        self.assertEqual(result["required_window"], 5)
+        self.assertEqual(result["stable_duration_ms"], 300)
+
+    def test_stable_high_confidence_sequences_accept_priority_classes(self):
+        priority_classes = [
+            "Halo",
+            "Makan",
+            "Maaf",
+            "Berhenti",
+            "Membaca",
+            "Mau",
+            "Saya",
+            "Anda",
+            "Apa",
+            "Nama",
+            "Lelah",
+            "Takut",
+            "Bodoh",
+            "Siapa",
+            "Terima kasih",
+        ]
+        for label in priority_classes:
+            with self.subTest(label=label):
+                stabilizer = PredictionStabilizer()
+                result = None
+                for index in range(3):
+                    result = stabilizer.evaluate(label, 0.98, timestamp_ms=100 + index * 150, probabilities={label: 0.98})
+                self.assertTrue(result["accepted"])
+                self.assertEqual(result["stable_label"], label)
+
+    def test_sentence_flow_accepts_next_words_without_full_no_hand_release(self):
+        stabilizer = PredictionStabilizer()
+        accepted = []
+        sequence = [
+            ("Saya", 100),
+            ("Saya", 250),
+            ("Saya", 500),
+            ("Mau", 650),
+            ("Mau", 800),
+            ("Mau", 950),
+            ("Makan", 1100),
+            ("Makan", 1250),
+            ("Makan", 1400),
+        ]
+        for label, timestamp in sequence:
+            result = stabilizer.evaluate(label, 0.9, timestamp_ms=timestamp, probabilities={label: 0.9})
+            if result["accepted"]:
+                accepted.append(result["stable_label"])
+        self.assertEqual(accepted, ["Saya", "Mau", "Makan"])
+
+    def test_same_word_requires_release_before_second_acceptance(self):
+        stabilizer = PredictionStabilizer()
+        accepted = []
+        for timestamp in [100, 250, 500, 650, 800, 950]:
+            result = stabilizer.evaluate("Saya", 0.9, timestamp_ms=timestamp, probabilities={"Saya": 0.9})
+            if result["accepted"]:
+                accepted.append(result["stable_label"])
+        self.assertEqual(accepted, ["Saya"])
+        for timestamp in [1100, 1250, 1400]:
+            stabilizer.evaluate(None, 0, timestamp_ms=timestamp)
+        for timestamp in [1550, 1700, 1850]:
+            result = stabilizer.evaluate("Saya", 0.9, timestamp_ms=timestamp, probabilities={"Saya": 0.9})
+            if result["accepted"]:
+                accepted.append(result["stable_label"])
+        self.assertEqual(accepted, ["Saya", "Saya"])
+
+    def test_calibration_rejects_low_margin(self):
+        calibration = BisindoCalibration()
+        predictions = calibration.calibrate_predictions(
+            [
+                {"label": "Berhenti", "confidence": 0.99},
+                {"label": "Halo", "confidence": 0.98},
+                {"label": "Apa", "confidence": 0.2},
+            ]
+        )
+        _top, reason, margin = calibration.decision(predictions)
+        self.assertEqual(reason, "low_margin")
+        self.assertLess(margin, calibration.min_margin)
+
+    def test_roi_probability_aggregation_uses_evidence_across_candidates(self):
+        calibration = BisindoCalibration()
+        aggregated = calibration.aggregate_candidate_predictions(
+            [
+                {"raw_predictions": [{"label": "Saya", "confidence": 0.78}, {"label": "Membaca", "confidence": 0.65}]},
+                {"raw_predictions": [{"label": "Saya", "confidence": 0.74}, {"label": "Membaca", "confidence": 0.42}]},
+                {"raw_predictions": [{"label": "Saya", "confidence": 0.62}, {"label": "Membaca", "confidence": 0.79}]},
+            ]
+        )
+        self.assertEqual(aggregated[0]["label"], "Saya")
+
+    def test_structure_masks_two_hand_class_for_one_hand_input(self):
+        recognizer = TerbisaStructureRecognizer()
+        predictions = [
+            {"label": "Membaca", "confidence": 0.99, "calibrated_confidence": 0.99},
+            {"label": "Saya", "confidence": 0.96, "calibrated_confidence": 0.96},
+        ]
+        result = recognizer.apply(predictions, structure={"hands_detected": 1}, hands_detected=1)
+        self.assertIn("Membaca", result["masked_classes"])
+        self.assertEqual(result["predictions"][0]["label"], "Saya")
+        membaca = next(item for item in result["predictions"] if item["label"] == "Membaca")
+        self.assertEqual(membaca["calibrated_confidence"], 0.0)
+        self.assertEqual(membaca["structural_rejection_reason"], "insufficient_hands")
+
+    def test_structure_allows_two_hand_class_for_two_hand_input(self):
+        recognizer = TerbisaStructureRecognizer()
+        result = recognizer.apply([{"label": "Membaca", "confidence": 0.99, "calibrated_confidence": 0.99}], structure={"hands_detected": 2}, hands_detected=2)
+        self.assertNotIn("Membaca", result["masked_classes"])
+        self.assertEqual(result["predictions"][0]["calibrated_confidence"], 0.99)
+
+    def test_one_hand_membaca_top1_cannot_survive_predict_sign(self):
+        original = main.bisindo_detector
+        original_classifier = main.bisindo_classifier
+        original_stabilizer = main.prediction_stabilizer
+        fake = FakeDetector(
+            DetectionResult(
+                status="ok",
+                detected=True,
+                class_id=11,
+                raw_label="Membaca",
+                display_label="Membaca",
+                confidence=0.99,
+                raw_predictions=[
+                    {"class_id": 11, "raw_label": "Membaca", "label": "Membaca", "confidence": 0.99},
+                    {"class_id": 2, "raw_label": "Berhenti", "label": "Berhenti", "confidence": 0.98},
+                    {"class_id": 14, "raw_label": "Saya", "label": "Saya", "confidence": 0.96},
+                ],
+                detections=1,
+                threshold_detections=1,
+                valid_detections=1,
+            )
+        )
+        main.bisindo_detector = fake
+        main.bisindo_classifier = fake
+        main.prediction_stabilizer = PredictionStabilizer(window=1, stable_count=1, release_window=3, min_stable_duration_ms=0)
+        try:
+            response = asyncio.run(
+                main.predict_sign(
+                    FakeUpload(),
+                    frame_id="one-hand-membaca",
+                    mirrored=False,
+                    hands_detected=1,
+                    structure_json=json.dumps({"hands_detected": 1, "hands": [{"body_region": "chest"}]}),
+                )
+            )
+        finally:
+            main.bisindo_detector = original
+            main.bisindo_classifier = original_classifier
+            main.prediction_stabilizer = original_stabilizer
+        self.assertIn("Membaca", response.masked_classes)
+        self.assertIn("Berhenti", response.masked_classes)
+        self.assertNotEqual(response.prediction, "Membaca")
+        self.assertEqual(response.prediction, "Saya")
 
 
 if __name__ == "__main__":
