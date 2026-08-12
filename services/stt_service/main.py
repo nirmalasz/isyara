@@ -1,6 +1,9 @@
 import os
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import shutil
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
 from services.stt_service.stt_service import transcribe_audio_file
+
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
 app = FastAPI()
 
@@ -44,3 +47,37 @@ async def websocket_realtime_transcribe(websocket: WebSocket):
     except Exception as e:
         print(f"WebSocket STT Error: {e}")
         await websocket.close()
+
+@app.post("/transcribe")
+async def http_transcribe(audio: UploadFile = File(...)):
+    """
+    HTTP POST endpoint for one-shot Speech-to-Text.
+    Receives an uploaded audio file, transcribes it, and returns the text.
+    """
+    temp_filename = f"temp_upload_{os.getpid()}_{audio.filename}"
+    try:
+        # Save uploaded file
+        with open(temp_filename, "wb") as buffer:
+            shutil.copyfileobj(audio.file, buffer)
+            
+        # Transcribe
+        transcript = transcribe_audio_file(temp_filename)
+        
+        return {
+            "status": "ok",
+            "language": "id",
+            "text": transcript,
+            "message": "Transcription successful" if transcript else "No speech detected"
+        }
+    except Exception as e:
+        print(f"HTTP Transcribe Error: {e}")
+        return {
+            "status": "error",
+            "language": "id",
+            "text": "",
+            "message": str(e)
+        }
+    finally:
+        # Clean up temp file
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)

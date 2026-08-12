@@ -17,7 +17,7 @@ RATE = 16000
 RECORD_SECONDS = 4  # Records in 4-second chunks to translate live segments
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"🚀 Loading Faster-Whisper model on {device.upper()}...")
+print(f"Loading Faster-Whisper model on {device.upper()}...")
 
 # Using 'base' model for high speed on your RTX 4050
 model = WhisperModel("base", device=device, compute_type="float16" if device=="cuda" else "int8")
@@ -55,7 +55,7 @@ def record_audio_chunk():
     return temp_filename
 
 def main():
-    print("\n🎙️ Microphone is live! Start speaking in Indonesian. Press Ctrl+C to stop.\n")
+    print("Microphone is live! Start speaking in Indonesian. Press Ctrl+C to stop.\n")
     try:
         while True:
             audio_path = record_audio_chunk()
@@ -65,14 +65,14 @@ def main():
             
             text = " ".join([segment.text for segment in segments]).strip()
             if text:
-                print(f"🗣️ Transcribed: {text}")
+                print(f"> Transcribed: {text}")
                 
             # Clean up temp file
             if os.path.exists(audio_path):
                 os.remove(audio_path)
                 
     except KeyboardInterrupt:
-        print("\n🛑 Stopping live transcription test.")
+        print("Stopping live transcription test.")
         p.terminate()
 
 if __name__ == "__main__":
