@@ -1,34 +1,72 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Riwayat Terjemahan | ISYARA{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">Riwayat</p>
-      <h1 class="mt-2 text-3xl font-semibold text-[var(--color-dark)]">Terjemahan terakhir</h1>
-    </div>
-    <form method="post" action="{% url 'clear_translation_history' %}">
-      {% csrf_token %}
-      <button class="rounded border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-[var(--color-dark)] hover:bg-slate-50">Hapus Semua</button>
-    </form>
+
+<section class="hand-pattern-bg relative min-h-screen bg-white font-['Poppins']">
+
+  <!-- decorative hand icons -->
+  <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06]" aria-hidden="true">
+    <span class="material-symbols-outlined lib-hand-icon absolute left-[4%] top-[4%] text-[140px] rotate-[-12deg]">back_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute right-[6%] top-[10%] text-[130px] rotate-45">front_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute left-[6%] bottom-[6%] text-[130px] rotate-[18deg]">waving_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute right-[4%] bottom-[2%] text-[140px] -rotate-45">pan_tool</span>
   </div>
 
-  <div class="mt-8 divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-    {% for item in history_items %}
-      <article class="grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-primary)]">{{ item.get_direction_display }}</p>
-          <p class="mt-2 text-lg font-semibold text-[var(--color-dark)]">"{{ item.translated_text }}"</p>
-          <p class="mt-1 text-sm text-slate-500">{{ item.created_at|date:"d M Y H:i" }}{% if item.confidence_percent %} · {{ item.confidence_percent }}%{% endif %}</p>
-        </div>
-        <form method="post" action="{% url 'delete_translation_history' item.id %}">
-          {% csrf_token %}
-          <button class="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[var(--color-dark)] hover:bg-slate-50">Hapus</button>
-        </form>
-      </article>
-    {% empty %}
-      <div class="p-8 text-center text-slate-600">Belum ada riwayat terjemahan.</div>
-    {% endfor %}
+  <div class="relative z-10 mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+
+    <!-- Page header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[1.4px] text-[#A72A5B]">Riwayat</p>
+        <h1 class="mt-2 text-4xl font-extrabold leading-tight tracking-[-0.96px] text-[#1B1C1B]">Terjemahan terakhir</h1>
+      </div>
+      {% if history_items %}
+      <form method="post" action="{% url 'clear_translation_history' %}">
+        {% csrf_token %}
+        <button class="inline-flex items-center gap-2 rounded-full border border-[#DDBFC5] bg-white px-5 py-3 text-sm font-semibold text-[#1B1C1B] transition-colors hover:bg-[#FFF3EE]">
+          <span class="material-symbols-outlined" style="font-size:18px;">delete_sweep</span>
+          Hapus Semua
+        </button>
+      </form>
+      {% endif %}
+    </div>
+
+    <!-- History list -->
+    <div class="lib-card mt-8 overflow-hidden">
+      <div class="divide-y divide-[#F0DCD4]">
+        {% for item in history_items %}
+          <article class="grid gap-4 px-6 py-5 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div class="flex items-start gap-4">
+              <span class="material-symbols-outlined mt-0.5 text-[#DDBFC5]" style="font-size:24px;">
+                {% if item.direction == "sign_to_speech" %}sign_language{% else %}mic{% endif %}
+              </span>
+              <div>
+                <span class="lib-card-tag">{{ item.get_direction_display }}</span>
+                <p class="mt-2 text-lg font-bold text-[#1B1C1B]">&ldquo;{{ item.translated_text }}&rdquo;</p>
+                <p class="mt-1 text-sm text-[#8A7176]">
+                  {{ item.created_at|date:"d M Y H:i" }}{% if item.confidence_percent %} · {{ item.confidence_percent }}% akurasi{% endif %}
+                </p>
+              </div>
+            </div>
+            <form method="post" action="{% url 'delete_translation_history' item.id %}">
+              {% csrf_token %}
+              <button class="inline-flex items-center gap-1.5 rounded-full border border-[#DDBFC5] bg-white px-4 py-2 text-sm font-semibold text-[#564146] transition-colors hover:border-[#A72A5B] hover:text-[#A72A5B]">
+                <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                Hapus
+              </button>
+            </form>
+          </article>
+        {% empty %}
+          <div class="flex flex-col items-center gap-3 px-6 py-16 text-center">
+            <span class="material-symbols-outlined text-[#DDBFC5]" style="font-size:44px;">history</span>
+            <p class="text-[#564146]">Belum ada riwayat terjemahan.</p>
+            <a href="{% url 'translator' %}" class="mt-1 text-sm font-bold text-[#A72A5B]">Mulai menerjemahkan →</a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
   </div>
 </section>
 {% endblock %}

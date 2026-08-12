@@ -44,7 +44,7 @@
     overflow: hidden; /* penting biar zoom video ga bocor keluar rounded corner */
   }
 
-  /* ===== Hero: teks masuk berurutan ===== */
+  /* ===== Hero: teks masuk berurutan, pelan ===== */
   @keyframes fadeUpIn {
     0% { opacity: 0; transform: translateY(22px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -89,7 +89,7 @@
   .feature-card:nth-child(3) { --base-rot: 1deg;     --punch-x: -18px; --punch-rot: -5deg; }
   .feature-card:nth-child(4) { --base-rot: -4deg;    --punch-x: 20px;  --punch-rot: 8deg; }
 
-  /* ===== Card fitur: zig-zag + reveal on scroll ===== */
+  /* ===== Card fitur: zig-zag naik-turun + reveal on scroll ===== */
   .feature-card {
     --entry-y: 28px;
     --zig: 0px;
@@ -170,17 +170,17 @@
     <!-- Left: text -->
     <div class="flex flex-col items-start gap-6">
 
-      <p class="text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Translator BISINDO real-time</p>
+      <p class="hero-in hero-in-1 text-sm font-semibold uppercase tracking-[0.7px] text-[#A72A5B]">Translator BISINDO Real-Time</p>
 
-      <h1 class="max-w-xl text-5xl font-extrabold leading-[1.25] tracking-[-0.96px] text-[#1B1C1B]">
-        Jembatan komunikasi BISINDO dan Bahasa Indonesia
+      <h1 class="hero-in hero-in-2 max-w-xl text-5xl font-extrabold leading-[1.25] tracking-[-0.96px] text-[#1B1C1B]">
+        Percakapan Dua Arah yang Setara, Tanpa Hambatan Bahasa Isyarat
       </h1>
 
-      <p class="max-w-lg text-lg leading-7 text-[#564146]">
-        ISYARA membantu penerjemahan BISINDO ke teks dan suara Indonesia, serta ucapan Indonesia ke teks yang mudah dibaca.
+      <p class="hero-in hero-in-3 max-w-lg text-lg leading-7 text-[#564146]">
+        ISYARA menerjemahkan BISINDO menjadi teks dan suara Indonesia secara real-time, serta mengubah ucapan lawan bicara menjadi teks yang mudah dibaca — siap dipakai di layanan publik, ruang kerja, hingga percakapan sehari-hari.
       </p>
 
-      <div class="mt-2 flex flex-row items-center gap-4">
+      <div class="hero-in hero-in-4 mt-2 flex flex-row items-center gap-4">
         <a href="{% url 'translator' %}"
            class="rounded-full bg-[#A72A5B] px-8 py-3.5 text-sm font-semibold tracking-[0.14px] text-white shadow-sm hover:bg-[#8f2249] transition-colors">
           Mulai Menerjemahkan
@@ -246,24 +246,24 @@
 <section id="cara-kerja" class="relative overflow-hidden mx-auto max-w-6xl px-10 py-24 font-['Poppins']">
 
   <div class="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="-rotate-[2.5deg] rounded-xl bg-[#C84474] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#C84474] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">BISINDO ke <span class="font-bold not-italic">Teks</span></h3>
-      <p class="text-sm leading-6 opacity-90">Kamera membaca gerakan dan menyiapkan hasil teks Indonesia yang tetap bisa dilihat pengguna.</p>
+      <p class="text-sm leading-6 opacity-90">Kamera membaca gerakan tangan secara langsung dan menyajikan hasil terjemahan dalam teks Indonesia yang jelas dan akurat.</p>
     </div>
 
-    <div class="rotate-[2deg] rounded-xl bg-[#FFD0C1] p-8 text-[#7A574C] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#FFD0C1] p-8 text-[#7A574C] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">Suara yang Bisa <span class="font-bold not-italic">Dibaca</span></h3>
-      <p class="text-sm leading-6 opacity-90">Ucapan Bahasa Indonesia dapat ditampilkan sebagai teks besar untuk percakapan dua arah.</p>
+      <p class="text-sm leading-6 opacity-90">Ucapan lawan bicara diubah menjadi teks besar dan mudah diikuti, sehingga percakapan berjalan dua arah dan setara.</p>
     </div>
 
-    <div class="rotate-[1deg] rounded-xl bg-[#FFD9E1] p-8 text-[#3F001B] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#FFD9E1] p-8 text-[#3F001B] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">Pelacakan Gerakan <span class="font-bold not-italic">AI</span></h3>
-      <p class="text-sm leading-6 opacity-90">Landmark tangan, tubuh, dan wajah membantu menyiapkan pipeline pengenalan tanda terbatas.</p>
+      <p class="text-sm leading-6 opacity-90">Landmark tangan, tubuh, dan wajah dianalisis secara presisi untuk mendukung pengenalan tanda yang lebih andal.</p>
     </div>
 
-    <div class="-rotate-[4deg] rounded-xl bg-[#FFDBD0] p-8 text-[#2E150D] shadow-[0_10px_10px_rgba(0,0,0,0.25)] transition-transform hover:rotate-0">
+    <div class="feature-card rounded-xl bg-[#FFDBD0] p-8 text-[#2E150D] shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">Riwayat <span class="font-bold not-italic">Percakapan</span></h3>
-      <p class="text-sm leading-6 opacity-90">Simpan hasil terjemahan penting agar percakapan bisa ditinjau kembali dengan aman.</p>
+      <p class="text-sm leading-6 opacity-90">Simpan hasil terjemahan penting dengan aman, sehingga percakapan bisa ditinjau dan dijadikan referensi kapan saja.</p>
     </div>
 
   </div>
