@@ -2,118 +2,229 @@
 {% load static %}
 {% block title %}Translator | ISYARA{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-  <div class="rounded-lg border border-[var(--color-primary-tint)] bg-white p-5 shadow-sm sm:p-7">
-    <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">ISYARA Translator</p>
-    <div class="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <h1 class="text-3xl font-semibold text-[var(--color-dark)] sm:text-4xl">Jembatan komunikasi dua arah.</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">MVP ini mendukung kosakata BISINDO terbatas dan transkripsi ucapan Indonesia. Model pengenal tanda akan menampilkan status jujur jika belum tersedia.</p>
-      </div>
-      <div class="grid grid-cols-2 gap-2 rounded-lg bg-[var(--color-background)] p-1" role="tablist" aria-label="Mode translator">
-        <button id="modeSign" type="button" class="rounded-md bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white" aria-pressed="true">BISINDO → Suara</button>
-        <button id="modeSpeech" type="button" class="rounded-md px-4 py-3 text-sm font-semibold text-[var(--color-dark)]" aria-pressed="false">Suara → Teks</button>
-      </div>
-    </div>
+
+<section class="hand-pattern-bg relative bg-white font-['Poppins']">
+
+  <!-- decorative hand icons -->
+  <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06]" aria-hidden="true">
+    <span class="material-symbols-outlined lib-hand-icon absolute left-[3%] top-[3%] text-[150px] rotate-[-12deg]">back_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute right-[5%] top-[8%] text-[130px] rotate-45">front_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute left-[5%] top-[55%] text-[130px] rotate-12">pan_tool</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute right-[6%] top-[60%] text-[140px] -rotate-[8deg]">back_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute left-[4%] bottom-[3%] text-[140px] rotate-[18deg]">waving_hand</span>
+    <span class="material-symbols-outlined lib-hand-icon absolute right-[8%] bottom-[2%] text-[130px] -rotate-45">front_hand</span>
   </div>
 
-  <div id="signModePanel" class="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-    <div class="space-y-4">
-      <div class="camera-frame camera-container overflow-hidden rounded-lg border border-slate-200 bg-slate-950 shadow-sm">
-        <video id="translatorCamera" class="h-full w-full bg-slate-950 object-cover" autoplay playsinline muted></video>
-        <canvas id="translatorOverlay" class="landmark-overlay" aria-hidden="true"></canvas>
-        <div id="translatorCameraFallback" class="hidden aspect-video place-items-center p-8 text-center text-white">
-          <div>
-            <p class="text-xl font-semibold">Kamera tidak tersedia</p>
-            <p class="mt-2 text-sm text-slate-300">Izinkan akses kamera untuk menerjemahkan BISINDO.</p>
-          </div>
+  <div class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+
+    <!-- Page header -->
+    <div class="lib-card p-6 sm:p-8">
+      <p class="text-sm font-semibold uppercase tracking-[1.4px] text-[#A72A5B]">ISYARA Translator</p>
+      <div class="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 class="text-3xl font-extrabold leading-tight tracking-[-0.5px] text-[#1B1C1B] sm:text-4xl">
+            Jembatan komunikasi <span class="trans-gradient-text">dua arah</span>.
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-[#564146]">
+            MVP ini mendukung kosakata BISINDO terbatas dan transkripsi ucapan Indonesia. Model pengenal tanda akan menampilkan status jujur jika belum tersedia.
+          </p>
+        </div>
+
+        <!-- Mode toggle -->
+        <div class="trans-mode-toggle" role="tablist" aria-label="Mode translator">
+          <button id="modeSign" type="button" class="trans-mode-btn is-active" aria-pressed="true">
+            <span class="material-symbols-outlined" style="font-size:18px;">sign_language</span>
+            BISINDO → Suara
+          </button>
+          <button id="modeSpeech" type="button" class="trans-mode-btn" aria-pressed="false">
+            <span class="material-symbols-outlined" style="font-size:18px;">mic</span>
+            Suara → Teks
+          </button>
         </div>
       </div>
+    </div>
 
-      <div class="grid gap-4 lg:grid-cols-3">
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Status</p>
-          <div class="mt-3 space-y-2 text-sm font-semibold">
-            <p id="translatorCameraStatus" class="tracking-pill">○ Kamera menunggu</p>
-            <p id="translatorAiStatus" class="tracking-pill">○ Model BISINDO menunggu</p>
-            <p id="translatorMotionStatus" class="tracking-pill">○ Model BISINDO menunggu</p>
-          </div>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Terdeteksi</p>
-          <div class="mt-3 rounded-lg bg-[var(--color-background)] p-5">
-            <p id="detectedText" class="text-2xl font-semibold text-[var(--color-dark)]">Model penerjemah sedang disiapkan.</p>
-            <p id="detectedConfidence" class="mt-2 text-sm font-medium text-slate-600">Confidence: -</p>
-          </div>
-          {% if debug_inference %}
-          <div id="translatorDebugPanel" class="mt-3 rounded-lg border border-dashed border-slate-300 bg-white p-4 text-xs text-slate-700">
-            <p class="font-semibold uppercase tracking-[0.12em] text-slate-500">Debug inference</p>
-            <div class="mt-2 grid gap-2 sm:grid-cols-2">
-              <div>
-                <p class="font-semibold text-slate-600">Raw prediction</p>
-                <div id="debugRawPredictions" class="mt-1 whitespace-pre-line font-mono">-</div>
-              </div>
-              <div>
-                <p class="font-semibold text-slate-600">Stable prediction</p>
-                <div id="debugStablePrediction" class="mt-1 font-mono">-</div>
-                <div id="debugSuppression" class="mt-1 font-mono text-slate-500">-</div>
-              </div>
+    <!-- ============ SIGN MODE ============ -->
+    <div id="signModePanel" class="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div class="space-y-4">
+
+        <!-- Camera -->
+        <div id="translatorCameraFrame" class="camera-frame camera-container trans-camera-frame">
+          <video id="translatorCamera" class="h-full w-full bg-[#1B1C1B] object-cover" autoplay playsinline muted></video>
+          <canvas id="translatorOverlay" class="landmark-overlay" aria-hidden="true"></canvas>
+
+          <div id="translatorCameraFallback" class="hidden aspect-video place-items-center p-8 text-center text-white">
+            <div>
+              <span class="material-symbols-outlined text-white/60" style="font-size:40px;">videocam_off</span>
+              <p class="mt-3 text-xl font-semibold">Kamera tidak tersedia</p>
+              <p class="mt-2 text-sm text-white/70">Izinkan akses kamera untuk menerjemahkan BISINDO.</p>
             </div>
           </div>
-          {% endif %}
-        </div>
-      </div>
-      {% if eval_mode %}
-      <div id="translatorEvalPanel" class="rounded-lg border border-dashed border-[var(--color-primary-tint)] bg-white p-4 shadow-sm">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Local webcam evaluation</p>
-            <p class="mt-1 text-sm text-slate-600">Debug-only sampling tool. This is not formal model accuracy.</p>
+
+          <!-- Floating status pills — top-left -->
+          <div class="trans-float trans-float-top-left">
+            <p id="translatorCameraStatus" class="trans-glass-pill">○ Kamera menunggu</p>
+            <p id="translatorAiStatus" class="trans-glass-pill">○ Model BISINDO menunggu</p>
+            <p id="translatorMotionStatus" class="trans-glass-pill">○ Model BISINDO menunggu</p>
           </div>
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <select id="evalTargetSign" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-[var(--color-dark)]"></select>
-            <button id="evalCaptureSample" type="button" class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white">Capture 10 samples</button>
-            <button id="evalReset" type="button" class="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[var(--color-dark)]">Reset</button>
+
+          <!-- Fullscreen toggle — top-right -->
+          <button id="toggleCameraView" type="button" class="trans-fullscreen-btn" title="Perbesar tampilan kamera">
+            <span class="material-symbols-outlined" style="font-size:20px;">fullscreen</span>
+          </button>
+
+          <!-- Floating detected text — bottom -->
+          <div class="trans-float trans-float-bottom">
+            <div class="trans-glass-panel">
+              <p id="detectedText" class="text-lg font-bold text-white sm:text-2xl">Model penerjemah sedang disiapkan.</p>
+              <p id="detectedConfidence" class="mt-1 text-xs font-medium text-white/70 sm:text-sm">Confidence: -</p>
+            </div>
           </div>
         </div>
-        <div id="evalSummary" class="mt-3 rounded bg-[var(--color-background)] p-3 text-sm font-medium text-[var(--color-dark)]">No samples yet.</div>
-        <div id="evalLog" class="mt-3 max-h-48 overflow-auto rounded bg-slate-950 p-3 font-mono text-xs text-slate-100"></div>
+
+        {% if debug_inference %}
+        <div id="translatorDebugPanel" class="lib-card border-dashed p-4 text-xs text-[#564146]">
+          <p class="font-semibold uppercase tracking-[1px] text-[#8A7176]">Debug inference</p>
+          <div class="mt-2 grid gap-2 sm:grid-cols-2">
+            <div>
+              <p class="font-semibold text-[#1B1C1B]">Raw prediction</p>
+              <div id="debugRawPredictions" class="mt-1 whitespace-pre-line font-mono">-</div>
+            </div>
+            <div>
+              <p class="font-semibold text-[#1B1C1B]">Stable prediction</p>
+              <div id="debugStablePrediction" class="mt-1 font-mono">-</div>
+              <div id="debugSuppression" class="mt-1 font-mono text-[#8A7176]">-</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if eval_mode %}
+        <div id="translatorEvalPanel" class="lib-card border-dashed p-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[1px] text-[#8A7176]">Local webcam evaluation</p>
+              <p class="mt-1 text-sm text-[#564146]">Debug-only sampling tool. This is not formal model accuracy.</p>
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <select id="evalTargetSign" class="rounded-full border border-[#DDBFC5] bg-white px-3 py-2 text-sm font-semibold text-[#1B1C1B]"></select>
+              <button id="evalCaptureSample" type="button" class="trans-btn-primary">Capture 10 samples</button>
+              <button id="evalReset" type="button" class="trans-btn-outline">Reset</button>
+            </div>
+          </div>
+          <div id="evalSummary" class="mt-3 rounded-xl bg-[#FFF3EE] p-3 text-sm font-medium text-[#1B1C1B]">No samples yet.</div>
+          <div id="evalLog" class="mt-3 max-h-48 overflow-auto rounded-xl bg-[#1B1C1B] p-3 font-mono text-xs text-slate-100"></div>
+        </div>
+        {% endif %}
+
       </div>
-      {% endif %}
+
+      <!-- Sidebar -->
+      <aside class="space-y-4">
+        <div class="lib-card p-5">
+          <h2 class="text-lg font-bold text-[#1B1C1B]">Transcript</h2>
+          <div id="signTranscript" class="mt-4 min-h-32 rounded-xl bg-[#FFF3EE] p-4 text-xl font-medium leading-8 text-[#1B1C1B]" aria-live="polite">
+            Belum ada tanda stabil yang dikenali.
+          </div>
+          <div class="mt-4 grid gap-2">
+            <button id="speakSignText" type="button" class="trans-btn-primary">
+              <span class="material-symbols-outlined" style="font-size:18px;">volume_up</span>
+              Putar Suara
+            </button>
+            <button id="clearSignTranscript" type="button" class="trans-btn-outline">Hapus</button>
+            <button id="restartSignTranslator" type="button" class="trans-btn-outline">Mulai Ulang</button>
+          </div>
+        </div>
+
+        <div class="lib-card p-5">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#A72A5B]" style="font-size:20px;">info</span>
+            <h2 class="text-base font-bold text-[#1B1C1B]">Batasan MVP</h2>
+          </div>
+          <p class="mt-2 text-sm leading-6 text-[#564146]">
+            Model aktif saat ini mengenali 19 kata BISINDO. MediaPipe tetap dipakai untuk overlay landmark visual, sedangkan prediksi kata memakai YOLO.
+          </p>
+        </div>
+      </aside>
     </div>
 
-    <aside class="space-y-4">
-      <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 class="text-lg font-semibold text-[var(--color-dark)]">Transcript</h2>
-        <div id="signTranscript" class="mt-4 min-h-32 rounded-lg bg-[var(--color-background)] p-4 text-xl font-medium leading-8 text-[var(--color-dark)]" aria-live="polite">Belum ada tanda stabil yang dikenali.</div>
-        <div class="mt-4 grid gap-2">
-          <button id="speakSignText" type="button" class="rounded bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-strong)]">Putar Suara</button>
-          <button id="clearSignTranscript" type="button" class="rounded border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-[var(--color-dark)] hover:bg-slate-50">Hapus</button>
-          <button id="restartSignTranslator" type="button" class="rounded border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-[var(--color-dark)] hover:bg-slate-50">Mulai Ulang</button>
+    <!-- ============ SPEECH MODE ============ -->
+    <div id="speechModePanel" class="mt-6 hidden lib-card p-6 sm:p-10">
+      <div class="mx-auto max-w-2xl text-center">
+        <div class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-[#A72A5B] to-[#79564B]">
+          <span class="material-symbols-outlined text-white" style="font-size:28px;">mic</span>
+        </div>
+        <p class="mt-4 text-sm font-semibold uppercase tracking-[1.4px] text-[#A72A5B]">Suara → Teks</p>
+        <h2 class="mt-2 text-3xl font-extrabold text-[#1B1C1B]">Ucapan Indonesia menjadi teks besar.</h2>
+
+        <p id="microphoneStatus" class="trans-glass-pill mx-auto mt-6 w-fit">○ Mikrofon menunggu</p>
+
+        <div id="speechTranscript" class="mt-6 min-h-40 rounded-xl bg-[#FFF3EE] p-6 text-left text-2xl font-medium leading-10 text-[#1B1C1B]" aria-live="polite">
+          Belum ada transkripsi.
+        </div>
+
+        <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <button id="recordSpeech" type="button" class="trans-btn-primary">
+            <span class="material-symbols-outlined" style="font-size:18px;">mic</span>
+            Mulai Rekam
+          </button>
+          <button id="stopSpeech" type="button" class="trans-btn-outline" disabled>Stop</button>
+          <button id="copySpeechText" type="button" class="trans-btn-outline">
+            <span class="material-symbols-outlined" style="font-size:18px;">content_copy</span>
+            Salin Teks
+          </button>
         </div>
       </div>
-      <div class="rounded-lg border border-[var(--color-primary-tint)] bg-white p-5 shadow-sm">
-        <h2 class="text-lg font-semibold text-[var(--color-dark)]">Batasan MVP</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-600">Model aktif saat ini mengenali 19 kata BISINDO. MediaPipe tetap dipakai untuk overlay landmark visual, sedangkan prediksi kata memakai YOLO.</p>
-      </div>
-    </aside>
-  </div>
-
-  <div id="speechModePanel" class="mt-6 hidden rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-    <div class="mx-auto max-w-3xl text-center">
-      <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">Suara → Teks</p>
-      <h2 class="mt-2 text-3xl font-semibold text-[var(--color-dark)]">Ucapan Indonesia menjadi teks besar.</h2>
-      <p id="microphoneStatus" class="mx-auto mt-5 max-w-sm rounded-lg bg-[var(--color-background)] px-4 py-3 text-sm font-semibold text-slate-700">○ Mikrofon menunggu</p>
-      <div id="speechTranscript" class="mt-6 min-h-40 rounded-lg bg-[var(--color-background)] p-6 text-left text-2xl font-medium leading-10 text-[var(--color-dark)]" aria-live="polite">Belum ada transkripsi.</div>
-      <div class="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-        <button id="recordSpeech" type="button" class="rounded bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--color-strong)]">Mulai Rekam</button>
-        <button id="stopSpeech" type="button" class="rounded border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[var(--color-dark)] hover:bg-slate-50" disabled>Stop</button>
-        <button id="copySpeechText" type="button" class="rounded border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[var(--color-dark)] hover:bg-slate-50">Salin Teks</button>
-      </div>
     </div>
+
   </div>
 </section>
+
 {% csrf_token %}
+
+<script>
+  // Fullscreen toggle for camera — uses real browser Fullscreen API
+  (function () {
+    const frame = document.getElementById('translatorCameraFrame');
+    const btn = document.getElementById('toggleCameraView');
+    if (!frame || !btn) return;
+
+    function updateIcon(isFull) {
+      btn.querySelector('.material-symbols-outlined').textContent = isFull ? 'fullscreen_exit' : 'fullscreen';
+      btn.title = isFull ? 'Kembali ke tampilan biasa' : 'Perbesar tampilan kamera';
+    }
+
+    btn.addEventListener('click', async () => {
+      const isCurrentlyFull = document.fullscreenElement === frame;
+      try {
+        if (!isCurrentlyFull) {
+          if (frame.requestFullscreen) {
+            await frame.requestFullscreen();
+          } else {
+            frame.classList.add('trans-camera-fullscreen');
+            updateIcon(true);
+          }
+        } else {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else {
+            frame.classList.remove('trans-camera-fullscreen');
+            updateIcon(false);
+          }
+        }
+      } catch (err) {
+        console.warn('Fullscreen request failed, falling back to CSS mode.', err);
+        frame.classList.toggle('trans-camera-fullscreen');
+        updateIcon(!isCurrentlyFull);
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      updateIcon(document.fullscreenElement === frame);
+    });
+  })();
+</script>
+
 {% endblock %}
 {% block scripts %}
 <script type="module" src="{% static 'js/translator.js' %}"></script>
