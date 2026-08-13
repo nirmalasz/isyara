@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786595441067_6_left_square_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786595441067_6_left_square_context_decoded.jpg",
+  "roi_type": "left_square_context",
+  "frame_id": "6",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 545.0,
+    "y1": 367.0,
+    "x2": 1207.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 54574,
+  "source_size": {
+    "width": 662,
+    "height": 353
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.7985265851020813
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.08735157549381256
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.06998912245035172
+    },
+    {
+      "class_id": 3,
+      "raw_label": "Bodoh",
+      "label": "Bodoh",
+      "confidence": 0.016673240810632706
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.009868228808045387
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.6853786706924438
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.12156733870506287
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.06863467395305634
+    },
+    {
+      "class_id": 3,
+      "raw_label": "Bodoh",
+      "label": "Bodoh",
+      "confidence": 0.057180315256118774
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.02162271924316883
+    }
+  ]
+}

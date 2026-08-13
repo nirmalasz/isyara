@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786598263406_2_left_upper_body.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786598263406_2_left_upper_body_decoded.jpg",
+  "roi_type": "left_upper_body",
+  "frame_id": "2",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 476.0,
+    "y1": 138.0,
+    "x2": 1167.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 87896,
+  "source_size": {
+    "width": 691,
+    "height": 582
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.5589972734451294
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.3430941700935364
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.03194810450077057
+    },
+    {
+      "class_id": 3,
+      "raw_label": "Bodoh",
+      "label": "Bodoh",
+      "confidence": 0.027278998866677284
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.012780684046447277
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.45274221897125244
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.43643537163734436
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.03250574320554733
+    },
+    {
+      "class_id": 3,
+      "raw_label": "Bodoh",
+      "label": "Bodoh",
+      "confidence": 0.02415604516863823
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.021868862211704254
+    }
+  ]
+}

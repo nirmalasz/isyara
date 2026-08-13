@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786592881438_69_right_square_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786592881438_69_right_square_context_decoded.jpg",
+  "roi_type": "right_square_context",
+  "frame_id": "69",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 0.0,
+    "y1": 28.0,
+    "x2": 1218.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Right"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 170767,
+  "source_size": {
+    "width": 1218,
+    "height": 692
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.9934792518615723
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 0.0026009180583059788
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.0008399398066103458
+    },
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.0007865027873776853
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.0007798186270520091
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.9947338104248047
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.0017998847179114819
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 0.0006249501602724195
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.0005505328299477696
+    },
+    {
+      "class_id": 6,
+      "raw_label": "Hati-hati",
+      "label": "Hati-hati",
+      "confidence": 0.0004792124964296818
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786592851636_57_right_square_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786592851636_57_right_square_context_decoded.jpg",
+  "roi_type": "right_square_context",
+  "frame_id": "57",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 0.0,
+    "y1": 28.0,
+    "x2": 1218.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Right"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 187655,
+  "source_size": {
+    "width": 1218,
+    "height": 692
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.9988275170326233
+    },
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.0009085641358979046
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 0.00010490886779734865
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 4.18239324062597e-05
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 3.640469003585167e-05
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.9997310042381287
+    },
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.00019019146566279233
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 2.5845978598226793e-05
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 1.1764142982428893e-05
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 1.1667229045997374e-05
+    }
+  ]
+}

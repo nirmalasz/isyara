@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786604848282_18_left_large_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786604848282_18_left_large_context_decoded.jpg",
+  "roi_type": "left_large_context",
+  "frame_id": "18",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 531.0,
+    "y1": 269.0,
+    "x2": 838.0,
+    "y2": 691.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 33680,
+  "source_size": {
+    "width": 307,
+    "height": 422
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.715637743473053
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.16884960234165192
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.06541015207767487
+    },
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.015414480119943619
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 0.011867263354361057
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.5546004772186279
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.2476436197757721
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.1548594981431961
+    },
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.010362501256167889
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.009590791538357735
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786604921912_50_left_large_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786604921912_50_left_large_context_decoded.jpg",
+  "roi_type": "left_large_context",
+  "frame_id": "50",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 677.0,
+    "y1": 160.0,
+    "x2": 1015.0,
+    "y2": 585.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 2,
+  "handedness": [
+    "Right",
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 37675,
+  "source_size": {
+    "width": 338,
+    "height": 425
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.9799044132232666
+    },
+    {
+      "class_id": 1,
+      "raw_label": "Apa",
+      "label": "Apa",
+      "confidence": 0.006148727145045996
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.0030064331367611885
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.002961701713502407
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.0014653168618679047
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.9537026286125183
+    },
+    {
+      "class_id": 1,
+      "raw_label": "Apa",
+      "label": "Apa",
+      "confidence": 0.034746136516332626
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.002900074003264308
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.0019257523817941546
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.001334346947260201
+    }
+  ]
+}

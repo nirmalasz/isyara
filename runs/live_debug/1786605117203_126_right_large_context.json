@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786605117203_126_right_large_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786605117203_126_right_large_context_decoded.jpg",
+  "roi_type": "right_large_context",
+  "frame_id": "126",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 295.0,
+    "y1": 109.0,
+    "x2": 661.0,
+    "y2": 627.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Right"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 48562,
+  "source_size": {
+    "width": 366,
+    "height": 518
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.9735620617866516
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.007423564326018095
+    },
+    {
+      "class_id": 1,
+      "raw_label": "Apa",
+      "label": "Apa",
+      "confidence": 0.006338811479508877
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.004956699442118406
+    },
+    {
+      "class_id": 7,
+      "raw_label": "Lelah",
+      "label": "Lelah",
+      "confidence": 0.0019235438667237759
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.9830899238586426
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.005879576317965984
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.004467625170946121
+    },
+    {
+      "class_id": 1,
+      "raw_label": "Apa",
+      "label": "Apa",
+      "confidence": 0.0018417253158986568
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.0008650328381918371
+    }
+  ]
+}

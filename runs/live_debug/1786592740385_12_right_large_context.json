@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786592740385_12_right_large_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786592740385_12_right_large_context_decoded.jpg",
+  "roi_type": "right_large_context",
+  "frame_id": "12",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 114.0,
+    "y1": 2.0,
+    "x2": 828.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Right"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 119504,
+  "source_size": {
+    "width": 714,
+    "height": 718
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.9634535312652588
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.01583864726126194
+    },
+    {
+      "class_id": 7,
+      "raw_label": "Lelah",
+      "label": "Lelah",
+      "confidence": 0.007159979548305273
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.0030188080854713917
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 0.0021398309618234634
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.9365223050117493
+    },
+    {
+      "class_id": 7,
+      "raw_label": "Lelah",
+      "label": "Lelah",
+      "confidence": 0.020258495584130287
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.01320169772952795
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.006276295054703951
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.004927422385662794
+    }
+  ]
+}

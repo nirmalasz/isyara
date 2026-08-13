@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786604814902_4_left_large_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786604814902_4_left_large_context_decoded.jpg",
+  "roi_type": "left_large_context",
+  "frame_id": "4",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 300.0,
+    "y1": 277.0,
+    "x2": 599.0,
+    "y2": 579.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 19658,
+  "source_size": {
+    "width": 299,
+    "height": 302
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.5911645889282227
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.3462170958518982
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.01567082665860653
+    },
+    {
+      "class_id": 3,
+      "raw_label": "Bodoh",
+      "label": "Bodoh",
+      "confidence": 0.0119771184399724
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.005618248600512743
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.45585742592811584
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.3687116205692291
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.06071729212999344
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.04697708040475845
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.02308858372271061
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+{% load static %}
+<style>
+  .chatbot-widget {
+    position: fixed;
+    bottom: 24px;
+    left: auto;
+    right: 24px;
+    z-index: 9999;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .chatbot-toggle {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    background: linear-gradient(120deg, #A72A5B, #79564B);
+    color: #FFFFFF;
+    box-shadow: 0 8px 20px rgba(167, 42, 91, 0.35);
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .chatbot-toggle:hover {
+    transform: scale(1.05);
+  }
+
+  .chatbot-panel {
+    position: absolute;
+    bottom: 72px;
+    left: auto;
+    right: 0;
+    width: 340px;
+    max-width: calc(100vw - 48px);
+    background: #FFFFFF;
+    border: 1px solid #EFEDEC;
+    border-radius: 16px;
+    box-shadow: 0 12px 36px rgba(87, 47, 40, 0.18);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform-origin: bottom left;
+    animation: chatbot-pop 0.18s ease-out;
+  }
+  .chatbot-panel.hidden {
+    display: none;
+  }
+
+  @keyframes chatbot-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .chatbot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #FFF3EE;
+    font-weight: 600;
+    font-size: 14px;
+    color: #1B1C1B;
+    border-bottom: 1px solid #F0DCD4;
+  }
+  .chatbot-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #8A7176;
+    display: grid;
+    place-items: center;
+  }
+
+  .chatbot-messages {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .chatbot-bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 85%;
+  }
+  .chatbot-bubble-bot {
+    background: #FFF3EE;
+    color: #1B1C1B;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .chatbot-bubble-user {
+    background: #A72A5B;
+    color: #FFFFFF;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .chatbot-typing {
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  .chatbot-video-link {
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 600;
+    color: #A72A5B;
+    text-decoration: none;
+    margin-top: -4px;
+  }
+  .chatbot-video-link:hover {
+    text-decoration: underline;
+  }
+
+  .chatbot-form {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid #EFEDEC;
+  }
+  .chatbot-form input {
+    flex: 1;
+    border: 1px solid #DDBFC5;
+    border-radius: 9999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    outline: none;
+  }
+  .chatbot-form input:focus {
+    border-color: #A72A5B;
+  }
+  .chatbot-form button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    background: #A72A5B;
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+  }
+</style>
+
+<div id="chatbot-widget" class="chatbot-widget">
+  <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Buka chatbot">
+    <span class="material-symbols-outlined">chat</span>
+  </button>
+
+  <div id="chatbot-panel" class="chatbot-panel hidden">
+    <div class="chatbot-header">
+      <span>Tanya ISYAR-AI</span>
+      <button id="chatbot-close" aria-label="Tutup chatbot">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div id="chatbot-messages" class="chatbot-messages">
+      <div class="chatbot-bubble chatbot-bubble-bot">
+        Hai! aku ISYAR-AI yang akan membantu kamu memperagakan isyarat BISINDO, misalnya "cara bilang terima kasih gimana?"
+      </div>
+    </div>
+
+    <form id="chatbot-form" class="chatbot-form">
+      <input id="chatbot-input" type="text" placeholder="Tulis pertanyaan..." maxlength="300" autocomplete="off">
+      <button type="submit" aria-label="Kirim">
+        <span class="material-symbols-outlined">send</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="{% static 'js/chatbot.js' %}"></script>

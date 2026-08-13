@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786596307418_5_right_upper_body.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786596307418_5_right_upper_body_decoded.jpg",
+  "roi_type": "right_upper_body",
+  "frame_id": "5",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 202.0,
+    "y1": 0.0,
+    "x2": 979.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Right"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 104430,
+  "source_size": {
+    "width": 777,
+    "height": 720
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.3342072665691376
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.21515975892543793
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.10618585348129272
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.09013950079679489
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.07833238691091537
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.24399206042289734
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.21186964213848114
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.12959472835063934
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.10714402049779892
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.09838437288999557
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786603305789_8_left_square_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786603305789_8_left_square_context_decoded.jpg",
+  "roi_type": "left_square_context",
+  "frame_id": "8",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 778.0,
+    "y1": 478.0,
+    "x2": 1225.0,
+    "y2": 712.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 28120,
+  "source_size": {
+    "width": 447,
+    "height": 234
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.3466736972332001
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.1545584350824356
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.13284176588058472
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.08309021592140198
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.06771836429834366
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.2559604048728943
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.1663201004266739
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.12834593653678894
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.12566249072551727
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.07327426970005035
+    }
+  ]
+}

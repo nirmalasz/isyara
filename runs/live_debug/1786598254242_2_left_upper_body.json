@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786598254242_2_left_upper_body.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786598254242_2_left_upper_body_decoded.jpg",
+  "roi_type": "left_upper_body",
+  "frame_id": "2",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 447.0,
+    "y1": 0.0,
+    "x2": 1173.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 102989,
+  "source_size": {
+    "width": 726,
+    "height": 720
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.3994775712490082
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.16655363142490387
+    },
+    {
+      "class_id": 3,
+      "raw_label": "Bodoh",
+      "label": "Bodoh",
+      "confidence": 0.15696316957473755
+    },
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.1196536123752594
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.0679849237203598
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.3608548641204834
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.2677055299282074
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.15330518782138824
+    },
+    {
+      "class_id": 3,
+      "raw_label": "Bodoh",
+      "label": "Bodoh",
+      "confidence": 0.09309299290180206
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.020935896784067154
+    }
+  ]
+}

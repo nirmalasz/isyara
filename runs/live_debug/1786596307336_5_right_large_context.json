@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786596307336_5_right_large_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786596307336_5_right_large_context_decoded.jpg",
+  "roi_type": "right_large_context",
+  "frame_id": "5",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 296.0,
+    "y1": 192.0,
+    "x2": 884.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Right"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 67009,
+  "source_size": {
+    "width": 588,
+    "height": 528
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.6010228991508484
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.15492822229862213
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.07083999365568161
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.06418595463037491
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.033459242433309555
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.5091783404350281
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.15326862037181854
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.08567953109741211
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.07132503390312195
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.06523995846509933
+    }
+  ]
+}

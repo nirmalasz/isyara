@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786604851138_19_left_face_union.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786604851138_19_left_face_union_decoded.jpg",
+  "roi_type": "left_face_union",
+  "frame_id": "19",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 217.0,
+    "y1": 40.0,
+    "x2": 1064.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 116196,
+  "source_size": {
+    "width": 847,
+    "height": 680
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.6245152354240417
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.12503497302532196
+    },
+    {
+      "class_id": 7,
+      "raw_label": "Lelah",
+      "label": "Lelah",
+      "confidence": 0.03815699741244316
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.036776114255189896
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.029744740575551987
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 15,
+      "raw_label": "Siapa",
+      "label": "Siapa",
+      "confidence": 0.4668576121330261
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.2390812188386917
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.04764867201447487
+    },
+    {
+      "class_id": 0,
+      "raw_label": "Anda",
+      "label": "Anda",
+      "confidence": 0.045732200145721436
+    },
+    {
+      "class_id": 4,
+      "raw_label": "Cantik",
+      "label": "Cantik",
+      "confidence": 0.03728349879384041
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786603297730_5_right_upper_body.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786603297730_5_right_upper_body_decoded.jpg",
+  "roi_type": "right_upper_body",
+  "frame_id": "5",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 1063.0,
+    "y1": 415.0,
+    "x2": 1280.0,
+    "y2": 720.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Right"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 22706,
+  "source_size": {
+    "width": 217,
+    "height": 305
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.5314458012580872
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.1442439705133438
+    },
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.08869916945695877
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.06595223397016525
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.05199243873357773
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.2675412893295288
+    },
+    {
+      "class_id": 5,
+      "raw_label": "Halo",
+      "label": "Halo",
+      "confidence": 0.20250292122364044
+    },
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.20087750256061554
+    },
+    {
+      "class_id": 12,
+      "raw_label": "Nama",
+      "label": "Nama",
+      "confidence": 0.07466188073158264
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.07282105833292007
+    }
+  ]
+}

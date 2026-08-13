@@ -1,0 +1,98 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786604878327_31_right_large_context.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786604878327_31_right_large_context_decoded.jpg",
+  "roi_type": "right_large_context",
+  "frame_id": "31",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 368.0,
+    "y1": 256.0,
+    "x2": 728.0,
+    "y2": 627.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 2,
+  "handedness": [
+    "Right",
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 28929,
+  "source_size": {
+    "width": 360,
+    "height": 371
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.7688218951225281
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.08908552676439285
+    },
+    {
+      "class_id": 7,
+      "raw_label": "Lelah",
+      "label": "Lelah",
+      "confidence": 0.04342542961239815
+    },
+    {
+      "class_id": 12,
+      "raw_label": "Nama",
+      "label": "Nama",
+      "confidence": 0.016781294718384743
+    },
+    {
+      "class_id": 17,
+      "raw_label": "Takut",
+      "label": "Takut",
+      "confidence": 0.0097050741314888
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 11,
+      "raw_label": "Membaca",
+      "label": "Membaca",
+      "confidence": 0.6940854787826538
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.2350204735994339
+    },
+    {
+      "class_id": 12,
+      "raw_label": "Nama",
+      "label": "Nama",
+      "confidence": 0.01103175524622202
+    },
+    {
+      "class_id": 7,
+      "raw_label": "Lelah",
+      "label": "Lelah",
+      "confidence": 0.009906113147735596
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.0074653103947639465
+    }
+  ]
+}
