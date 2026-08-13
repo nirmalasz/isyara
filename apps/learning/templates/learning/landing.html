@@ -83,13 +83,32 @@
   .float-hand-b { animation: floatB 19s ease-in-out infinite; }
   .float-hand-c { animation: floatC 17s ease-in-out infinite; }
 
+  /* ===== Bento: layout flex biar baris terakhir yang ganjil otomatis center ===== */
+  .bento-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 2rem;
+    row-gap: 4.5rem; /* jarak antar baris dilebarin biar ga mepet sama efek zig-zag */
+  }
+  .feature-card {
+    width: 100%;
+  }
+  @media (min-width: 640px) {
+    .feature-card { width: calc(50% - 1rem); }
+  }
+  @media (min-width: 1024px) {
+    .feature-card { width: calc(33.333% - 1.334rem); }
+  }
+
   /* ===== Card fitur: rotasi dasar tiap kartu + arah "punch" saat diklik ===== */
   .feature-card:nth-child(1) { --base-rot: -2.5deg; --punch-x: -20px; --punch-rot: -6deg; }
   .feature-card:nth-child(2) { --base-rot: 2deg;    --punch-x: 20px;  --punch-rot: 7deg; }
   .feature-card:nth-child(3) { --base-rot: 1deg;     --punch-x: -18px; --punch-rot: -5deg; }
   .feature-card:nth-child(4) { --base-rot: -4deg;    --punch-x: 20px;  --punch-rot: 8deg; }
+  .feature-card:nth-child(5) { --base-rot: 2.5deg;   --punch-x: -18px; --punch-rot: -6deg; }
 
-  /* ===== Card fitur: zig-zag naik-turun + reveal on scroll ===== */
+  /* ===== Card fitur: zig-zag naik-turun (lebih halus) + reveal on scroll ===== */
   .feature-card {
     --entry-y: 28px;
     --zig: 0px;
@@ -106,10 +125,10 @@
   .feature-card:hover {
     --hover-scale: 1.03;
   }
-  /* offset naik-turun ala zig-zag, hanya berlaku di layar lebar biar rapi di mobile */
+  /* offset naik-turun ala zig-zag dikecilin, hanya berlaku di layar lebar biar rapi di mobile */
   @media (min-width: 1024px) {
-    .feature-card:nth-child(odd)  { --zig: -18px; }
-    .feature-card:nth-child(even) { --zig: 18px; }
+    .feature-card:nth-child(odd)  { --zig: -10px; }
+    .feature-card:nth-child(even) { --zig: 10px; }
   }
 
   /* efek "goyang" pelan ke samping + rotasi tambahan saat card diklik/ditekan */
@@ -245,7 +264,7 @@
 <!-- Bento features -->
 <section id="cara-kerja" class="relative overflow-hidden mx-auto max-w-6xl px-10 py-24 font-['Poppins']">
 
-  <div class="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+  <div class="bento-wrap relative z-10">
     <div class="feature-card rounded-xl bg-[#C84474] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
       <h3 class="mb-4 text-2xl italic leading-snug">BISINDO ke <span class="font-bold not-italic">Teks</span></h3>
       <p class="text-sm leading-6 opacity-90">Kamera membaca gerakan tangan secara langsung dan menyajikan hasil terjemahan dalam teks Indonesia yang jelas dan akurat.</p>
@@ -266,8 +285,13 @@
       <p class="text-sm leading-6 opacity-90">Simpan hasil terjemahan penting dengan aman, sehingga percakapan bisa ditinjau dan dijadikan referensi kapan saja.</p>
     </div>
 
+    <div class="feature-card rounded-xl bg-[#79564B] p-8 text-white shadow-[0_10px_10px_rgba(0,0,0,0.25)]">
+      <h3 class="mb-4 text-2xl italic leading-snug">Tanya <span class="font-bold not-italic">ISYAR-AI</span></h3>
+      <p class="text-sm leading-6 opacity-90">Chatbot pintar siap menjawab caramu memperagakan isyarat tertentu, lengkap dengan video referensi yang relevan.</p>
+    </div>
   </div>
 </section>
+
 <section id="tentang" class="tentang-interactive relative mx-auto max-w-5xl overflow-hidden px-10 py-20 font-['Poppins']">
   <!-- tangan dekoratif yang ikut gerak mengikuti kursor (parallax) -->
   <span class="material-symbols-outlined parallax-hand absolute left-[6%] top-[14%] text-[110px] text-[#A72A5B] opacity-[0.08]" data-speed="18" aria-hidden="true">front_hand</span>

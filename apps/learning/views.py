@@ -13,6 +13,8 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import DetailView, FormView, ListView, TemplateView, UpdateView
+from django.contrib.auth.decorators import login_required
+from apps.learning.services.chatbot_service import generate_chatbot_reply
 from django_ratelimit.decorators import ratelimit
 
 from .forms import LoginForm, OnboardingForm, ProfileForm, SignupForm
@@ -624,3 +626,20 @@ class SaveTranslationHistoryAPIView(LoginRequiredMixin, View):
             confidence=payload.get("confidence"),
         )
         return JsonResponse({"status": "saved", "id": item.id}, status=201)
+
+@login_required
+def chatbot_reply_view(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid request"}, status=400)
+
+    user_query = data.get("message", "").strip()
+    if not user_query:
+        return JsonResponse({"error": "Pesan tidak boleh kosong"}, status=400)
+
+    if len(user_query) > 300:
+        return JsonResponse({"error": "Pesan terlalu panjang"}, status=400)
+
+    result = generate_chatbot_reply(user_query)
+    return JsonResponse(result)

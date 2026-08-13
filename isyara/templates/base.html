@@ -12,6 +12,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
 </head>
+
 <body class="min-h-screen bg-[var(--color-background)] text-[var(--color-dark)]">
   <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
@@ -56,8 +57,13 @@
     <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
       {% include "components/logo.html" with size="footer" %}
       <p>Belajar BISINDO dengan latihan AI dan umpan balik gerakan.</p>
-    </div>
-  </footer>
-  {% block scripts %}{% endblock %}
-</body>
+  </div>
+    </footer>
+  
+    {% if user.is_authenticated %}
+      {% include "components/chatbot_widget.html" %}
+    {% endif %}
+  
+    {% block scripts %}{% endblock %}
+  </body>
 </html>

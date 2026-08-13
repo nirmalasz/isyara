@@ -32,4 +32,5 @@ urlpatterns = [
     path("api/translator/predict-sign/", views.PredictSignAPIView.as_view(), name="api_predict_sign"),
     path("api/translator/transcribe/", views.TranscribeSpeechAPIView.as_view(), name="api_transcribe_speech"),
     path("api/translator/history/", views.SaveTranslationHistoryAPIView.as_view(), name="api_save_translation_history"),
+    path("api/chatbot/", views.chatbot_reply_view, name="chatbot_reply"),
 ]
