@@ -1,0 +1,97 @@
+{
+  "exact_input_path": "runs\\live_debug\\1786603303421_7_left_upper_body.jpg",
+  "decoded_rgb_path": "runs\\live_debug\\1786603303421_7_left_upper_body_decoded.jpg",
+  "roi_type": "left_upper_body",
+  "frame_id": "7",
+  "full_frame_dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi": {
+    "x1": 874.0,
+    "y1": 458.0,
+    "x2": 1196.0,
+    "y2": 688.0,
+    "source_width": 1280,
+    "source_height": 720
+  },
+  "hands_detected": 1,
+  "handedness": [
+    "Left"
+  ],
+  "mirrored": false,
+  "expected_display_orientation": "classifier_input_not_mirrored",
+  "content_type": "image/jpeg",
+  "input_bytes": 20967,
+  "source_size": {
+    "width": 322,
+    "height": 230
+  },
+  "image_mode": "RGB",
+  "classifier_image_size": 224,
+  "preprocessing_note": "PIL RGB image is passed directly to Ultralytics YOLO classify with imgsz=224.",
+  "top5_original": [
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.43088293075561523
+    },
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.19766782224178314
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.0755978673696518
+    },
+    {
+      "class_id": 8,
+      "raw_label": "Maaf",
+      "label": "Maaf",
+      "confidence": 0.05352777987718582
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.05343617498874664
+    }
+  ],
+  "top5_flipped": [
+    {
+      "class_id": 18,
+      "raw_label": "Terima-kasih",
+      "label": "Terima kasih",
+      "confidence": 0.35259750485420227
+    },
+    {
+      "class_id": 16,
+      "raw_label": "Sombong",
+      "label": "Sombong",
+      "confidence": 0.18211205303668976
+    },
+    {
+      "class_id": 2,
+      "raw_label": "Berhenti",
+      "label": "Berhenti",
+      "confidence": 0.10455022752285004
+    },
+    {
+      "class_id": 9,
+      "raw_label": "Makan",
+      "label": "Makan",
+      "confidence": 0.07964935898780823
+    },
+    {
+      "class_id": 13,
+      "raw_label": "Sama-sama",
+      "label": "Sama-sama",
+      "confidence": 0.07628995925188065
+    }
+  ]
+}
