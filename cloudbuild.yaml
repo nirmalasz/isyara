@@ -1,3 +1,6 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -17,6 +20,22 @@ steps:
     args:
       - 'push'
       - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:latest'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'isyara-all'
+      - '--image'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:$COMMIT_SHA'
+      - '--region'
+      - 'asia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
 
 images:
   - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:$COMMIT_SHA'
