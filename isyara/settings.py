@@ -83,6 +83,9 @@ if DATABASE_URL:
             "PASSWORD": parsed_database_url.password or os.getenv("POSTGRES_PASSWORD", ""),
             "HOST": parsed_database_url.hostname or os.getenv("POSTGRES_HOST", "localhost"),
             "PORT": parsed_database_url.port or os.getenv("POSTGRES_PORT", "5432"),
+            "OPTIONS": {
+                "sslmode": os.getenv("POSTGRES_SSLMODE", "require"),
+            },
         }
     }
 else:
@@ -90,9 +93,6 @@ else:
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
-            "OPTIONS": {
-                        "sslmode": os.getenv("POSTGRES_SSLMODE", "require"),
-            },
         }
     }
 
