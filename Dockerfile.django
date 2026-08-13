@@ -1,42 +1,20 @@
-options:
-  logging: CLOUD_LOGGING_ONLY
+FROM python:3.11-slim
 
-steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-f'
-      - 'Dockerfile.django'
-      - '-t'
-      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA'
-      - '-t'
-      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:latest'
-      - '.'
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA']
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev ffmpeg libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:latest']
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
-    entrypoint: gcloud
-    args:
-      - 'run'
-      - 'deploy'
-      - 'isyara-web'
-      - '--image'
-      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA'
-      - '--region'
-      - 'asia-southeast1'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
-      - '--port'
-      - '8080'
-      - '--set-env-vars'
-      - 'DJANGO_SETTINGS_MODULE=isyara.settings,DJANGO_DEBUG=0,SECURE_SSL_REDIRECT=1,SESSION_COOKIE_SECURE=1,CSRF_COOKIE_SECURE=1,ACCOUNT_EMAIL_VERIFICATION=none'
+COPY . .
 
-images:
-  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA'
-  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:latest'
+RUN python manage.py collectstatic --noinput || true
+
+EXPOSE 8080
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "isyara.wsgi:application"]
