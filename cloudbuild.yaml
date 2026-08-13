@@ -1,0 +1,23 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:$COMMIT_SHA'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:latest'
+
+images:
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:$COMMIT_SHA'
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-all:latest'
