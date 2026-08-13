@@ -541,10 +541,11 @@ class PredictSignAPIView(LoginRequiredMixin, View):
     def post(self, request):
         image_file = request.FILES.get("image")
         candidate_files = request.FILES.getlist("candidates")
-        if not image_file and not candidate_files:
+        is_no_hand_ping = request.POST.get("hands_detected") == "0"
+        if not image_file and not candidate_files and not is_no_hand_ping:
             return JsonResponse({"status": "error", "message": "Frame kamera wajib dikirim."}, status=400)
         uploads = candidate_files or [image_file]
-        if any(not getattr(upload, "content_type", "").startswith("image/") for upload in uploads):
+        if any(upload and not getattr(upload, "content_type", "").startswith("image/") for upload in uploads):
             return JsonResponse({"status": "error", "message": "Frame kamera harus berupa gambar."}, status=400)
         metadata = {
             key: value
@@ -560,6 +561,8 @@ class PredictSignAPIView(LoginRequiredMixin, View):
                 "hands_detected": request.POST.get("hands_detected"),
                 "handedness": request.POST.get("handedness"),
                 "candidates_json": request.POST.get("candidates_json"),
+                "structure_json": request.POST.get("structure_json"),
+                "timestamp_ms": request.POST.get("timestamp_ms"),
             }.items()
             if value not in {None, ""}
         }

@@ -38,6 +38,7 @@ class DetectionResult:
     image_width: int | None = None
     image_height: int | None = None
     image_mode: str | None = None
+    debug: dict[str, Any] | None = None
 
     @property
     def prediction(self):
@@ -74,6 +75,7 @@ class DetectionResult:
             "image_width": self.image_width,
             "image_height": self.image_height,
             "image_mode": self.image_mode,
+            "debug": self.debug or {},
         }
 
 

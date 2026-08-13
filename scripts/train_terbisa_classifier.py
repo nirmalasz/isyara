@@ -16,6 +16,14 @@ def parse_args():
     parser.add_argument("--batch", default="16")
     parser.add_argument("--device", default="mps")
     parser.add_argument("--patience", type=int, default=10)
+    parser.add_argument("--degrees", type=float, default=4.0)
+    parser.add_argument("--translate", type=float, default=0.04)
+    parser.add_argument("--scale", type=float, default=0.12)
+    parser.add_argument("--perspective", type=float, default=0.0005)
+    parser.add_argument("--fliplr", type=float, default=0.0)
+    parser.add_argument("--hsv-h", type=float, default=0.005)
+    parser.add_argument("--hsv-s", type=float, default=0.20)
+    parser.add_argument("--hsv-v", type=float, default=0.15)
     parser.add_argument("--project", type=Path, default=Path("runs/classify"))
     parser.add_argument("--name", default="bisindo_words_cls")
     parser.add_argument("--output", type=Path, default=Path("models/bisindo_words_cls.pt"))
@@ -35,6 +43,17 @@ def main():
         batch=batch,
         device=args.device,
         patience=args.patience,
+        degrees=args.degrees,
+        translate=args.translate,
+        scale=args.scale,
+        perspective=args.perspective,
+        fliplr=args.fliplr,
+        flipud=0.0,
+        hsv_h=args.hsv_h,
+        hsv_s=args.hsv_s,
+        hsv_v=args.hsv_v,
+        erasing=0.0,
+        auto_augment=None,
         project=str(args.project),
         name=args.name,
         exist_ok=True,

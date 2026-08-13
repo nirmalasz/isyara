@@ -1,0 +1,121 @@
+{
+  "samples": 2455,
+  "accuracy": 0.8786150712830957,
+  "false_membaca": 17,
+  "per_class": {
+    "Anda": {
+      "samples": 143,
+      "correct": 126,
+      "accuracy": 0.8811188811188811,
+      "main_confusion": "Siapa"
+    },
+    "Apa": {
+      "samples": 153,
+      "correct": 153,
+      "accuracy": 1.0,
+      "main_confusion": null
+    },
+    "Berhenti": {
+      "samples": 111,
+      "correct": 111,
+      "accuracy": 1.0,
+      "main_confusion": null
+    },
+    "Bodoh": {
+      "samples": 127,
+      "correct": 75,
+      "accuracy": 0.5905511811023622,
+      "main_confusion": "Sombong"
+    },
+    "Cantik": {
+      "samples": 110,
+      "correct": 102,
+      "accuracy": 0.9272727272727272,
+      "main_confusion": "Sombong"
+    },
+    "Halo": {
+      "samples": 99,
+      "correct": 89,
+      "accuracy": 0.898989898989899,
+      "main_confusion": "Maaf"
+    },
+    "Hati-hati": {
+      "samples": 111,
+      "correct": 81,
+      "accuracy": 0.7297297297297297,
+      "main_confusion": "Membaca"
+    },
+    "Lelah": {
+      "samples": 103,
+      "correct": 103,
+      "accuracy": 1.0,
+      "main_confusion": null
+    },
+    "Maaf": {
+      "samples": 124,
+      "correct": 121,
+      "accuracy": 0.9758064516129032,
+      "main_confusion": "Halo"
+    },
+    "Makan": {
+      "samples": 134,
+      "correct": 128,
+      "accuracy": 0.9552238805970149,
+      "main_confusion": "Apa"
+    },
+    "Mau": {
+      "samples": 156,
+      "correct": 125,
+      "accuracy": 0.8012820512820513,
+      "main_confusion": "Apa"
+    },
+    "Membaca": {
+      "samples": 81,
+      "correct": 75,
+      "accuracy": 0.9259259259259259,
+      "main_confusion": "Nama"
+    },
+    "Nama": {
+      "samples": 104,
+      "correct": 101,
+      "accuracy": 0.9711538461538461,
+      "main_confusion": "Berhenti"
+    },
+    "Sama-sama": {
+      "samples": 111,
+      "correct": 49,
+      "accuracy": 0.44144144144144143,
+      "main_confusion": "Anda"
+    },
+    "Saya": {
+      "samples": 158,
+      "correct": 150,
+      "accuracy": 0.9493670886075949,
+      "main_confusion": "Makan"
+    },
+    "Siapa": {
+      "samples": 161,
+      "correct": 148,
+      "accuracy": 0.9192546583850931,
+      "main_confusion": "Apa"
+    },
+    "Sombong": {
+      "samples": 137,
+      "correct": 135,
+      "accuracy": 0.9854014598540146,
+      "main_confusion": "Makan"
+    },
+    "Takut": {
+      "samples": 189,
+      "correct": 187,
+      "accuracy": 0.9894179894179894,
+      "main_confusion": "Membaca"
+    },
+    "Terima-kasih": {
+      "samples": 143,
+      "correct": 98,
+      "accuracy": 0.6853146853146853,
+      "main_confusion": "Apa"
+    }
+  }
+}

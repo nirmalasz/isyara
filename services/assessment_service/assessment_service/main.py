@@ -9,10 +9,16 @@ from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import BISINDO_CLASSIFICATION_CONFIDENCE_THRESHOLD, BISINDO_INFERENCE_MODE, BISINDO_YOLO_CONFIDENCE_THRESHOLD, BISINDO_YOLO_MODEL_PATH
-from .config import BISINDO_RELEASE_WINDOW, BISINDO_STABILIZATION_MATCHES, BISINDO_STABILIZATION_WINDOW
+from .config import BISINDO_HIGH_CONFIDENCE_MATCHES, BISINDO_HIGH_CONFIDENCE_STABLE_MS, BISINDO_HIGH_CONFIDENCE_THRESHOLD, BISINDO_HIGH_CONFIDENCE_WINDOW
+from .config import BISINDO_NORMAL_CONFIDENCE_MATCHES, BISINDO_NORMAL_CONFIDENCE_STABLE_MS, BISINDO_NORMAL_CONFIDENCE_WINDOW
+from .config import BISINDO_PROBABILITY_SMOOTHING_BETA, BISINDO_RELEASE_WINDOW, BISINDO_STABILIZATION_MATCHES, BISINDO_STABILIZATION_WINDOW, BISINDO_STABLE_DURATION_MS
+from .config import BISINDO_SWITCH_CONFIRM_FRAMES, BISINDO_SWITCH_MARGIN
 from .inference.bisindo_classifier import BisindoYoloClassifier
-from .inference.bisindo_detector import BisindoYoloDetector
+from .inference.bisindo_detector import DetectionResult, BisindoYoloDetector
+from .inference.calibration import BisindoCalibration
 from .inference.stabilization import PredictionStabilizer
+from .inference.structured_recognition import TerbisaStructureRecognizer
+from .inference.temporal_smoothing import TemporalProbabilitySmoother
 from .speech.transcription import SpeechTranscriptionService
 
 
@@ -91,6 +97,44 @@ class PredictSignResponse(BaseModel):
     image_width: int | None = None
     image_height: int | None = None
     image_mode: str | None = None
+    recognition_state: str | None = None
+    recognition_rejection_reason: str | None = None
+    agreement_count: int | None = None
+    required_count: int | None = None
+    required_window: int | None = None
+    required_duration_ms: int | None = None
+    stable_duration_ms: int | None = None
+    recognition_history: list[dict] = Field(default_factory=list)
+    raw_top1_label: str | None = None
+    raw_top1_confidence: float | None = None
+    aggregated_confidence: float | None = None
+    structure: dict | None = None
+    margin: float | None = None
+    class_threshold: float | None = None
+    calibrated_confidence: float | None = None
+    top2_label: str | None = None
+    top2_confidence: float | None = None
+    structural_compatibility: float | None = None
+    structural_rejection_reason: str | None = None
+    geometry_compatibility: dict = Field(default_factory=dict)
+    image_calibrated_confidence: float | None = None
+    fused_confidence: float | None = None
+    masked_classes: list[str] = Field(default_factory=list)
+    eligible_classes: list[str] = Field(default_factory=list)
+    region_votes: list[str] = Field(default_factory=list)
+    classifier_debug: dict = Field(default_factory=dict)
+    transcript_append_expected: bool = False
+    landmark_motion_score: float | None = None
+    roi_motion_score: float | None = None
+    pose_state: str | None = None
+    raw_top1: dict | None = None
+    smoothed_top1: dict | None = None
+    smoothed_confidence: float | None = None
+    current_stable_class: str | None = None
+    switch_candidate: str | None = None
+    switch_margin: float | None = None
+    switch_confirm_count: int | None = None
+    switch_confirm_frames: int | None = None
 
 
 class ExtractLandmarksResponse(BaseModel):
@@ -100,11 +144,26 @@ class ExtractLandmarksResponse(BaseModel):
 
 bisindo_detector = BisindoYoloDetector()
 bisindo_classifier = BisindoYoloClassifier()
+bisindo_calibration = BisindoCalibration()
+terbisa_structure = TerbisaStructureRecognizer()
 prediction_stabilizer = PredictionStabilizer(
     window=BISINDO_STABILIZATION_WINDOW,
     stable_count=BISINDO_STABILIZATION_MATCHES,
     release_window=BISINDO_RELEASE_WINDOW,
     min_average_confidence=BISINDO_YOLO_CONFIDENCE_THRESHOLD,
+    min_stable_duration_ms=BISINDO_STABLE_DURATION_MS,
+    high_confidence_threshold=BISINDO_HIGH_CONFIDENCE_THRESHOLD,
+    high_confidence_window=BISINDO_HIGH_CONFIDENCE_WINDOW,
+    high_confidence_count=BISINDO_HIGH_CONFIDENCE_MATCHES,
+    high_confidence_stable_ms=BISINDO_HIGH_CONFIDENCE_STABLE_MS,
+    normal_confidence_window=BISINDO_NORMAL_CONFIDENCE_WINDOW,
+    normal_confidence_count=BISINDO_NORMAL_CONFIDENCE_MATCHES,
+    normal_confidence_stable_ms=BISINDO_NORMAL_CONFIDENCE_STABLE_MS,
+)
+prediction_smoother = TemporalProbabilitySmoother(
+    beta=BISINDO_PROBABILITY_SMOOTHING_BETA,
+    switch_margin=BISINDO_SWITCH_MARGIN,
+    switch_confirm_frames=BISINDO_SWITCH_CONFIRM_FRAMES,
 )
 speech_transcription = SpeechTranscriptionService()
 
@@ -175,6 +234,8 @@ def model_info():
         "active": _active_predictor().model_info(),
         "detector": bisindo_detector.model_info(),
         "classifier": bisindo_classifier.model_info(),
+        "calibration": bisindo_calibration.report(),
+        "structure": terbisa_structure.report(),
     }
 
 
@@ -193,10 +254,53 @@ async def predict_sign(
     hands_detected: Annotated[int | None, Form()] = None,
     handedness: Annotated[str | None, Form()] = None,
     candidates_json: Annotated[str | None, Form()] = None,
+    structure_json: Annotated[str | None, Form()] = None,
+    timestamp_ms: Annotated[int | None, Form()] = None,
 ):
     candidates = candidates if isinstance(candidates, list) else None
     uploads = candidates or ([image] if image is not None else [])
+    structure = _json_object(structure_json)
     if not uploads:
+        if hands_detected == 0:
+            prediction_smoother.reset()
+            stability = prediction_stabilizer.evaluate(None, 0, timestamp_ms=timestamp_ms)
+            motion_debug = _motion_debug_fields(structure, {})
+            return PredictSignResponse(
+                status="no_hand",
+                detected=False,
+                class_id=None,
+                raw_label=None,
+                display_label=None,
+                label=None,
+                prediction=None,
+                display_text="Tangan belum terdeteksi",
+                confidence=None,
+                latency_ms=None,
+                frame_id=frame_id,
+                mirrored=mirrored,
+                hands_detected=0,
+                handedness=[],
+                image_width=source_width,
+                image_height=source_height,
+                stable=stability["stable"],
+                suppressed=stability["suppressed"],
+                accepted=stability["accepted"],
+                stable_prediction=stability["stable_label"],
+                stable_confidence=stability["average_confidence"],
+                locked_label=stability["locked_label"],
+                release_misses=stability["release_misses"],
+                recognition_state=stability["state"],
+                recognition_rejection_reason=stability["rejection_reason"],
+                agreement_count=stability["agreement_count"],
+                required_count=stability["required_count"],
+                required_window=stability["required_window"],
+                required_duration_ms=stability["required_duration_ms"],
+                stable_duration_ms=stability["stable_duration_ms"],
+                recognition_history=stability["history"],
+                structure=structure,
+                **motion_debug,
+                reason="no_hand",
+            )
         return PredictSignResponse(
             status="invalid_image",
             detected=False,
@@ -231,17 +335,38 @@ async def predict_sign(
         )
     candidate_meta = _candidate_metadata(candidates_json)
     if candidates:
-        result, payload, roi = await _predict_candidate_batch(uploads, candidate_meta)
+        result, payload, roi = await _predict_candidate_batch(uploads, candidate_meta, structure, hands_detected, frame_id, mirrored, source_width, source_height, handedness)
     else:
-        result = _active_predictor().predict(await image.read())
-        payload = result.as_dict()
         roi = _roi_payload(roi_x1, roi_y1, roi_x2, roi_y2, source_width, source_height)
+        image_bytes = await image.read()
+        result = _predict_image_bytes(
+            image_bytes,
+            debug_context=_debug_context(
+                roi_type="single",
+                frame_id=frame_id,
+                mirrored=mirrored,
+                roi=roi,
+                source_width=source_width,
+                source_height=source_height,
+                hands_detected=hands_detected,
+                handedness=handedness,
+                content_type=image.content_type,
+            ),
+        )
+        payload = result.as_dict()
         if roi and payload.get("bbox"):
             payload["bbox"] = _map_roi_bbox_to_source(payload["bbox"], roi)
         payload["roi_type"] = "single"
         payload["candidate_predictions"] = []
         payload["selected_candidate"] = _selected_candidate_payload(payload, roi, "single")
-    stability = prediction_stabilizer.evaluate(result.display_label, result.confidence or 0)
+        result, payload = _apply_calibration_to_single_result(result, payload, structure, hands_detected)
+    result, payload, smoothing = _apply_temporal_smoothing(result, payload, structure)
+    probabilities = smoothing.get("probabilities") or {
+        item["label"]: item.get("calibrated_confidence", item.get("confidence", 0)) for item in payload.get("raw_predictions", [])
+    }
+    stability = prediction_stabilizer.evaluate(result.display_label, result.confidence or 0, timestamp_ms=timestamp_ms, probabilities=probabilities)
+    raw_top1 = payload.get("raw_predictions", [{}])[0] if payload.get("raw_predictions") else {}
+    motion_debug = _motion_debug_fields(structure, smoothing)
     payload.update(
         {
             "stable": stability["stable"],
@@ -253,6 +378,17 @@ async def predict_sign(
             "stable_confidence": stability["average_confidence"],
             "locked_label": stability["locked_label"],
             "release_misses": stability["release_misses"],
+            "recognition_state": stability["state"],
+            "recognition_rejection_reason": stability["rejection_reason"],
+            "agreement_count": stability["agreement_count"],
+            "required_count": stability["required_count"],
+            "required_window": stability["required_window"],
+            "required_duration_ms": stability["required_duration_ms"],
+            "stable_duration_ms": stability["stable_duration_ms"],
+            "recognition_history": stability["history"],
+            "raw_top1_label": raw_top1.get("label"),
+            "raw_top1_confidence": raw_top1.get("confidence"),
+            "aggregated_confidence": stability["average_confidence"],
             "reason": payload.get("rejection_reason"),
             "roi": roi,
             "roi_type": payload.get("roi_type"),
@@ -265,6 +401,23 @@ async def predict_sign(
             "mirrored": mirrored,
             "image_width": source_width or payload.get("image_width"),
             "image_height": source_height or payload.get("image_height"),
+            "structure": structure,
+            "margin": payload.get("margin"),
+            "class_threshold": payload.get("class_threshold"),
+            "calibrated_confidence": payload.get("calibrated_confidence"),
+            "top2_label": payload.get("top2_label"),
+            "top2_confidence": payload.get("top2_confidence"),
+            "structural_compatibility": payload.get("structural_compatibility"),
+            "structural_rejection_reason": payload.get("structural_rejection_reason"),
+            "geometry_compatibility": payload.get("geometry_compatibility", {}),
+            "image_calibrated_confidence": payload.get("image_calibrated_confidence"),
+            "fused_confidence": payload.get("fused_confidence"),
+            "masked_classes": payload.get("masked_classes", []),
+            "eligible_classes": payload.get("eligible_classes", []),
+            "region_votes": payload.get("region_votes", []),
+            "classifier_debug": payload.get("debug", {}),
+            "transcript_append_expected": stability["accepted"],
+            **motion_debug,
         }
     )
     if not DEBUG_DIAGNOSTICS:
@@ -273,7 +426,7 @@ async def predict_sign(
             {key: value for key, value in item.items() if key != "raw_predictions"}
             for item in payload.get("candidate_predictions", [])
         ]
-    top3 = ", ".join(f"{item['label']}={item['confidence']:.2f}" for item in payload["raw_predictions"]) or "-"
+    top3 = ", ".join(f"{item['label']}={item.get('calibrated_confidence', item['confidence']):.2f}" for item in payload["raw_predictions"][:3]) or "-"
     selected = payload.get("selected_candidate") or {}
     print(
         "[ISYARA AI] predict "
@@ -282,9 +435,17 @@ async def predict_sign(
         f"raw=[{top3}] detections={payload['detections']} threshold={payload['threshold_detections']} valid={payload['valid_detections']} "
         f"hands={hands_detected} handedness={handedness or '-'} roi_type={payload.get('roi_type') or '-'} selected={selected.get('roi_type') or '-'} "
         f"roi={roi or '-'} bbox={payload.get('bbox') or '-'} reject={payload.get('rejection_reason') or '-'} "
-        f"stable={payload['stable']} accepted={payload['accepted']} suppressed={payload['suppressed']} "
-        f"lock={payload['locked_label'] or '-'} release={payload['release_misses']} "
+        f"margin={(payload.get('margin') or 0):.2f} threshold={(payload.get('class_threshold') or 0):.2f} top2={payload.get('top2_label') or '-'} "
+        f"struct={payload.get('structural_compatibility')} masked={','.join(payload.get('masked_classes', [])[:4]) or '-'} "
+        f"stable={payload['stable']} accepted={payload['accepted']} suppressed={payload['suppressed']} gate={payload.get('recognition_rejection_reason') or '-'} "
+        f"transcript_append={payload.get('transcript_append_expected')} "
+        f"pose={payload.get('pose_state') or '-'} raw_top1={(payload.get('raw_top1') or {}).get('label') or '-'} "
+        f"smooth_top1={(payload.get('smoothed_top1') or {}).get('label') or '-'} smooth_conf={(payload.get('smoothed_confidence') or 0):.2f} "
+        f"stable_class={payload.get('current_stable_class') or '-'} switch={payload.get('switch_candidate') or '-'}:{payload.get('switch_confirm_count') or 0} "
+        f"agreement={payload.get('agreement_count')}/{payload.get('required_count')} window={payload.get('required_window')} stable_ms={payload.get('required_duration_ms')} duration={payload.get('stable_duration_ms')} "
+        f"state={payload.get('recognition_state') or '-'} lock={payload['locked_label'] or '-'} release={payload['release_misses']} "
         f"image={payload.get('image_width')}x{payload.get('image_height')} mode={payload.get('image_mode')} "
+        f"debug_crop={(payload.get('debug') or {}).get('exact_input_path') or '-'} "
         f"latency_ms={payload.get('latency_ms')}"
     )
     return PredictSignResponse(**payload)
@@ -314,31 +475,259 @@ def _candidate_metadata(candidates_json):
     return data if isinstance(data, list) else []
 
 
-async def _predict_candidate_batch(uploads, candidate_meta):
+def _apply_temporal_smoothing(result, payload, structure=None):
+    smoothing = prediction_smoother.update(payload.get("raw_predictions", []), pose_state=(structure or {}).get("pose_state"))
+    stable_label = smoothing.get("current_stable_class")
+    stable_confidence = smoothing.get("current_stable_confidence")
+    if not stable_label:
+        return result, payload, smoothing
+    best = next((item for item in payload.get("raw_predictions", []) if item.get("label") == stable_label), None)
+    threshold = (best or {}).get("class_threshold", BISINDO_YOLO_CONFIDENCE_THRESHOLD)
+    if stable_confidence is None or stable_confidence < threshold:
+        payload.update(
+            {
+                "detected": False,
+                "display_label": None,
+                "label": None,
+                "prediction": None,
+                "confidence": stable_confidence,
+                "rejection_reason": "below_threshold",
+            }
+        )
+        smoothed = DetectionResult(
+            status="low_confidence",
+            detected=False,
+            class_id=None,
+            raw_label=None,
+            display_label=None,
+            confidence=stable_confidence,
+            latency_ms=payload.get("latency_ms"),
+            raw_predictions=payload.get("raw_predictions", []),
+            detections=payload.get("detections", 1),
+            threshold_detections=0,
+            valid_detections=payload.get("valid_detections", 1),
+            rejection_reason="below_threshold",
+            image_width=payload.get("image_width"),
+            image_height=payload.get("image_height"),
+            image_mode=payload.get("image_mode"),
+            debug=payload.get("debug"),
+        )
+        return smoothed, payload, smoothing
+
+    smoothed = DetectionResult(
+        status="ok",
+        detected=True,
+        class_id=best.get("class_id") if best else payload.get("class_id"),
+        raw_label=best.get("raw_label") if best else stable_label,
+        display_label=stable_label,
+        confidence=stable_confidence,
+        latency_ms=payload.get("latency_ms"),
+        raw_predictions=payload.get("raw_predictions", []),
+        detections=payload.get("detections", 1),
+        threshold_detections=1,
+        valid_detections=payload.get("valid_detections", 1),
+        bbox=payload.get("bbox"),
+        image_width=payload.get("image_width"),
+        image_height=payload.get("image_height"),
+        image_mode=payload.get("image_mode"),
+        debug=payload.get("debug"),
+    )
+    payload.update(
+        {
+            **smoothed.as_dict(),
+            "rejection_reason": None,
+            "calibrated_confidence": stable_confidence,
+            "class_threshold": threshold,
+        }
+    )
+    return smoothed, payload, smoothing
+
+
+def _motion_debug_fields(structure, smoothing):
+    structure = structure or {}
+    return {
+        "landmark_motion_score": structure.get("landmark_motion_score"),
+        "roi_motion_score": structure.get("roi_motion_score"),
+        "pose_state": structure.get("pose_state"),
+        "raw_top1": smoothing.get("raw_top1"),
+        "smoothed_top1": smoothing.get("smoothed_top1"),
+        "smoothed_confidence": smoothing.get("smoothed_confidence"),
+        "current_stable_class": smoothing.get("current_stable_class"),
+        "switch_candidate": smoothing.get("switch_candidate"),
+        "switch_margin": smoothing.get("switch_margin"),
+        "switch_confirm_count": smoothing.get("switch_confirm_count"),
+        "switch_confirm_frames": smoothing.get("switch_confirm_frames"),
+    }
+
+
+def _json_object(raw_json):
+    if not raw_json:
+        return {}
+    try:
+        data = json.loads(raw_json)
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+async def _predict_candidate_batch(uploads, candidate_meta, structure=None, hands_detected=None, frame_id=None, mirrored=None, source_width=None, source_height=None, handedness=None):
     candidate_payloads = []
-    selected = None
-    fallback = None
+    candidate_results = []
     for index, upload in enumerate(uploads):
         meta = candidate_meta[index] if index < len(candidate_meta) and isinstance(candidate_meta[index], dict) else {}
         roi = _roi_from_meta(meta)
         roi_type = str(meta.get("type") or f"candidate_{index + 1}")
-        result = _active_predictor().predict(await upload.read())
+        image_bytes = await upload.read()
+        result = _predict_image_bytes(
+            image_bytes,
+            debug_context=_debug_context(
+                roi_type=roi_type,
+                frame_id=frame_id,
+                mirrored=mirrored,
+                roi=roi,
+                source_width=source_width or meta.get("source_width"),
+                source_height=source_height or meta.get("source_height"),
+                hands_detected=hands_detected,
+                handedness=handedness,
+                content_type=upload.content_type,
+            ),
+        )
         payload = result.as_dict()
+        result, payload = _apply_calibration_to_single_result(result, payload, structure, hands_detected)
         if roi and payload.get("bbox"):
             payload["bbox"] = _map_roi_bbox_to_source(payload["bbox"], roi)
         candidate = _selected_candidate_payload(payload, roi, roi_type)
         candidate["raw_predictions"] = payload.get("raw_predictions", [])
         candidate_payloads.append(candidate)
-        if fallback is None or (candidate.get("confidence") or 0) > (fallback[1].get("confidence") or 0):
-            fallback = (result, payload, roi, roi_type)
-        if result.detected and (selected is None or (result.confidence or 0) > (selected[0].confidence or 0)):
-            selected = (result, payload, roi, roi_type)
+        candidate_results.append((result, payload, roi, roi_type))
 
-    result, payload, roi, roi_type = selected or fallback
+    result, payload, roi, roi_type = _aggregate_candidate_results(candidate_results, structure, hands_detected)
+
     payload["roi_type"] = roi_type
     payload["candidate_predictions"] = candidate_payloads
     payload["selected_candidate"] = _selected_candidate_payload(payload, roi, roi_type)
     return result, payload, roi
+
+
+def _apply_calibration_to_single_result(result, payload, structure=None, hands_detected=None):
+    calibrated = bisindo_calibration.calibrate_predictions(payload.get("raw_predictions", []))
+    structural = terbisa_structure.apply(calibrated, structure=structure, hands_detected=hands_detected)
+    calibrated = structural["predictions"]
+    payload["raw_predictions"] = calibrated
+    best, rejection_reason, margin = bisindo_calibration.decision(calibrated)
+    top2 = calibrated[1] if len(calibrated) > 1 else None
+    payload.update(
+        {
+            "margin": margin,
+            "class_threshold": best.get("class_threshold") if best else None,
+            "calibrated_confidence": best.get("calibrated_confidence") if best else None,
+            "top2_label": top2.get("label") if top2 else None,
+            "top2_confidence": top2.get("calibrated_confidence") if top2 else None,
+            "structural_compatibility": best.get("structural_compatibility") if best else None,
+            "structural_rejection_reason": best.get("structural_rejection_reason") if best else None,
+            "geometry_compatibility": best.get("geometry_compatibility", {}) if best else {},
+            "image_calibrated_confidence": best.get("image_calibrated_confidence") if best else None,
+            "fused_confidence": best.get("fused_confidence") if best else None,
+            "masked_classes": structural["masked_classes"],
+            "eligible_classes": structural["eligible_classes"],
+            "region_votes": sorted(structural["region_votes"]),
+        }
+    )
+    if not calibrated:
+        return result, payload
+    if rejection_reason:
+        fused = DetectionResult(
+            status="ambiguous" if rejection_reason == "low_margin" else "low_confidence",
+            detected=False,
+            class_id=None,
+            raw_label=None,
+            display_label=None,
+            confidence=best.get("calibrated_confidence"),
+            latency_ms=payload.get("latency_ms"),
+            raw_predictions=payload["raw_predictions"],
+            detections=payload.get("detections", 1),
+            threshold_detections=0,
+            valid_detections=payload.get("valid_detections", 1),
+            rejection_reason=rejection_reason,
+            image_width=payload.get("image_width"),
+            image_height=payload.get("image_height"),
+            image_mode=payload.get("image_mode"),
+            debug=payload.get("debug"),
+        )
+    else:
+        fused = DetectionResult(
+            status="ok",
+            detected=True,
+            class_id=best.get("class_id"),
+            raw_label=best.get("raw_label") or best.get("label"),
+            display_label=best.get("label"),
+            confidence=best.get("calibrated_confidence"),
+            latency_ms=payload.get("latency_ms"),
+            raw_predictions=payload["raw_predictions"],
+            detections=payload.get("detections", 1),
+            threshold_detections=1,
+            valid_detections=payload.get("valid_detections", 1),
+            bbox=payload.get("bbox"),
+            image_width=payload.get("image_width"),
+            image_height=payload.get("image_height"),
+            image_mode=payload.get("image_mode"),
+            debug=payload.get("debug"),
+        )
+    return fused, {**payload, **fused.as_dict(), **{key: payload.get(key) for key in ["margin", "class_threshold", "calibrated_confidence", "top2_label", "top2_confidence"]}}
+
+
+def _aggregate_candidate_results(candidate_results, structure=None, hands_detected=None):
+    if not candidate_results:
+        empty = DetectionResult(status="no_detection", detected=False, class_id=None, raw_label=None, display_label=None, confidence=None)
+        return empty, empty.as_dict(), None, None
+    calibrated = bisindo_calibration.aggregate_candidate_predictions([payload for _result, payload, _roi, _roi_type in candidate_results])
+    structural = terbisa_structure.apply(calibrated, structure=structure, hands_detected=hands_detected)
+    calibrated = structural["predictions"]
+    if not calibrated:
+        result, payload, roi, roi_type = max(candidate_results, key=lambda item: item[0].confidence or 0)
+        return result, payload, roi, roi_type
+    best, rejection_reason, margin = bisindo_calibration.decision(calibrated)
+    top2 = calibrated[1] if len(calibrated) > 1 else None
+    source = max(candidate_results, key=lambda item: next((raw.get("confidence", 0) for raw in item[1].get("raw_predictions", []) if raw.get("label") == best.get("label")), 0))
+    _result, source_payload, roi, roi_type = source
+    detected = rejection_reason is None
+    fused = DetectionResult(
+        status="ok" if detected else "low_confidence",
+        detected=detected,
+        class_id=best.get("class_id") if detected else None,
+        raw_label=best.get("raw_label") if detected else None,
+        display_label=best.get("label") if detected else None,
+        confidence=best.get("calibrated_confidence"),
+        latency_ms=source_payload.get("latency_ms"),
+        raw_predictions=calibrated,
+        detections=len(candidate_results),
+        threshold_detections=1 if detected else 0,
+        valid_detections=len(candidate_results),
+        bbox=source_payload.get("bbox"),
+        rejection_reason=rejection_reason,
+        image_width=source_payload.get("image_width"),
+        image_height=source_payload.get("image_height"),
+        image_mode=source_payload.get("image_mode"),
+        debug=source_payload.get("debug"),
+    )
+    payload = {
+        **source_payload,
+        **fused.as_dict(),
+        "margin": margin,
+        "class_threshold": best.get("class_threshold"),
+        "calibrated_confidence": best.get("calibrated_confidence"),
+        "top2_label": top2.get("label") if top2 else None,
+        "top2_confidence": top2.get("calibrated_confidence") if top2 else None,
+        "structural_compatibility": best.get("structural_compatibility"),
+        "structural_rejection_reason": best.get("structural_rejection_reason"),
+        "geometry_compatibility": best.get("geometry_compatibility", {}),
+        "image_calibrated_confidence": best.get("image_calibrated_confidence"),
+        "fused_confidence": best.get("fused_confidence"),
+        "masked_classes": structural["masked_classes"],
+        "eligible_classes": structural["eligible_classes"],
+        "region_votes": sorted(structural["region_votes"]),
+    }
+    return fused, payload, roi, roi_type
 
 
 def _active_inference_mode():
@@ -351,6 +740,34 @@ def _active_predictor():
     if _active_inference_mode() == "classifier":
         return bisindo_classifier
     return bisindo_detector
+
+
+def _predict_image_bytes(image_bytes, debug_context=None):
+    predictor = _active_predictor()
+    if _active_inference_mode() == "classifier":
+        try:
+            return predictor.predict(image_bytes, debug_context=debug_context if DEBUG_DIAGNOSTICS else None)
+        except TypeError:
+            return predictor.predict(image_bytes)
+    return predictor.predict(image_bytes)
+
+
+def _debug_context(roi_type, frame_id, mirrored, roi, source_width, source_height, hands_detected, handedness, content_type):
+    if not DEBUG_DIAGNOSTICS:
+        return None
+    return {
+        "debug_dir": "runs/live_debug",
+        "timestamp": int(__import__("time").time() * 1000),
+        "roi_type": roi_type,
+        "frame_id": frame_id,
+        "mirrored": mirrored,
+        "roi": roi,
+        "full_frame_dimensions": {"width": source_width, "height": source_height},
+        "hands_detected": hands_detected,
+        "handedness": [item for item in (handedness or "").split(",") if item],
+        "expected_display_orientation": "classifier_input_not_mirrored" if mirrored is False else "classifier_input_mirrored",
+        "content_type": content_type,
+    }
 
 
 def _roi_from_meta(meta):
@@ -376,6 +793,7 @@ def _selected_candidate_payload(payload, roi, roi_type):
         "bbox": payload.get("bbox"),
         "roi": roi,
         "rejection_reason": payload.get("rejection_reason"),
+        "debug": payload.get("debug", {}),
     }
 
 
