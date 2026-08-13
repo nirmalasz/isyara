@@ -1,0 +1,42 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'Dockerfile.django'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:latest']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'isyara-web'
+      - '--image'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA'
+      - '--region'
+      - 'asia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--set-env-vars'
+      - 'DJANGO_SETTINGS_MODULE=isyara.settings,DJANGO_DEBUG=0,SECURE_SSL_REDIRECT=1,SESSION_COOKIE_SECURE=1,CSRF_COOKIE_SECURE=1,ACCOUNT_EMAIL_VERIFICATION=none'
+
+images:
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:$COMMIT_SHA'
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/isyara-repo/isyara-web:latest'
