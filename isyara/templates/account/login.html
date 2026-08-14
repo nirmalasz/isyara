@@ -35,18 +35,6 @@
     </button>
   </form>
 
-  <div class="my-6 flex items-center gap-3 text-xs font-semibold text-[#8A7176]">
-    <span class="h-px flex-1 bg-[#EFEDEC]"></span>atau<span class="h-px flex-1 bg-[#EFEDEC]"></span>
-  </div>
-
-  {% if google_oauth_configured %}
-    <a href="{% provider_login_url 'google' %}" class="flex w-full items-center justify-center gap-2 rounded-full border border-[#DDBFC5] bg-white px-4 py-3 text-sm font-semibold text-[#1B1C1B] hover:bg-[#FFF3EE]">
-      <span class="material-symbols-outlined" style="font-size:18px;">login</span>
-      Masuk dengan Google
-    </a>
-  {% else %}
-    <p class="rounded-lg bg-[#FFD9E1] px-4 py-3 text-sm font-semibold text-[#A72A5B]">Google login belum dikonfigurasi di lingkungan lokal.</p>
-  {% endif %}
 
   <div class="mt-6 flex items-center justify-between text-sm">
     <a href="{% url 'password_reset' %}" class="font-semibold text-[#A72A5B] hover:underline">Lupa kata sandi?</a>
