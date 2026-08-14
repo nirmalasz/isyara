@@ -1,109 +1,141 @@
 import os
-import re
-from groq import Groq
-from rapidfuzz import fuzz, process
-from apps.learning.models import Lesson
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+from .models import Lesson
+
 
 SYSTEM_PROMPT = """Kamu adalah asisten BISINDO bernama ISYAR-AI.
 
-ATURAN KETAT — WAJIB DIIKUTI:
-1. Kamu HANYA boleh menjelaskan isyarat yang informasinya diberikan ke kamu di pesan user. Jangan pernah menyebut kata "data lesson", "konteks", atau istilah teknis lain — jawab natural seolah kamu memang tahu informasi itu.
-2. Jangan PERNAH menjelaskan cara memperagakan isyarat lain yang tidak diberikan informasinya, meskipun kamu merasa tahu jawabannya.
-3. Jangan pernah mengarang deskripsi gerakan tangan sendiri. Gunakan hanya deskripsi yang diberikan ke kamu.
-4. PENTING: Jika kamu menerima "Informasi kosakata" dengan Judul, Deskripsi, dan Video referensi — itu artinya isyarat TERSEDIA dan kamu HARUS menjawab dengan percaya diri bahwa isyarat itu ADA, bukan bilang "belum ada" atau "maaf". Langsung jelaskan isyaratnya dan sebutkan link videonya.
-5. Kamu HANYA boleh bilang "belum tersedia di database" jika kamu menerima pesan "Informasi: tidak ditemukan kosakata yang cocok di database" — HANYA dalam kondisi itu saja.
-6. Jangan pernah minta maaf ("maaf") kecuali benar-benar dalam kondisi aturan 5 di atas.
-7. Jawab singkat (maksimal 3-4 kalimat), ramah, dan percaya diri dalam Bahasa Indonesia santai tapi sopan.
-8. Jangan gunakan markdown, bullet points, atau format tebal — jawab sebagai teks percakapan biasa.
-
-Kamu TIDAK BOLEH menjawab pertanyaan di luar topik BISINDO/bahasa isyarat/aplikasi ISYARA."""
+ATURAN KETAT:
+1. Jawab hanya tentang BISINDO, bahasa isyarat, atau aplikasi ISYARA.
+2. Jangan mengarang gerakan. Gunakan informasi kosakata dari database.
+3. Jika kosakata ditemukan, jawab dengan percaya diri dan singkat.
+4. Jika kosakata tidak ditemukan, bilang belum tersedia di database.
+5. Jawab maksimal 3-4 kalimat, ramah, natural, dan dalam Bahasa Indonesia.
+6. Jangan gunakan markdown atau bullet points."""
 
 
-LETTER_PATTERN = re.compile(r"\b(?:huruf\s+)?([a-zA-Z])\b")
-NUMBER_PATTERN = re.compile(r"\b(?:angka\s+)?(\d+)\b")
+def _normalized(value):
+    return (value or "").strip().lower()
 
 
-def detect_alphabet_or_number_intent(user_query: str):
-    """Deteksi apakah query soal huruf tunggal atau angka, arahkan ke lesson khusus."""
-    query_lower = user_query.lower().strip()
-
-    number_match = NUMBER_PATTERN.search(query_lower)
-    if number_match:
+def _detect_alphabet_or_number_intent(user_query):
+    query = _normalized(user_query)
+    if any(keyword in query for keyword in ("huruf", "abjad", "alfabet", "eja", "mengeja")):
+        return "Abjad"
+    if any(keyword in query for keyword in ("angka", "nomor", "bilangan")):
         return "Angka"
-
-    letter_keywords = ["huruf", "abjad", "alfabet", "eja", "mengeja"]
-    if any(keyword in query_lower for keyword in letter_keywords):
+    if len(query) == 1 and query.isalpha():
         return "Abjad"
-
-    stripped = query_lower.replace("huruf", "").strip()
-    if len(stripped) == 1 and stripped.isalpha():
-        return "Abjad"
-
     return None
 
 
-def find_matching_lesson(user_query: str, score_cutoff: int = 55):
-    lessons = list(Lesson.objects.all())
+def _score_lesson(user_query, lesson):
+    query = _normalized(user_query)
+    title = _normalized(lesson.title)
+    sign_title = _normalized(getattr(lesson.sign, "title", ""))
+    slug = _normalized(lesson.slug).replace("-", " ")
+
+    if not query:
+        return 0
+    if query == title or query == sign_title:
+        return 100
+    if title and title in query:
+        return 95
+    if sign_title and sign_title in query:
+        return 95
+    if slug and slug in query:
+        return 90
+
+    try:
+        from rapidfuzz import fuzz
+
+        return max(
+            fuzz.WRatio(query, title),
+            fuzz.WRatio(query, sign_title),
+            fuzz.WRatio(query, slug),
+        )
+    except ImportError:
+        query_words = set(query.split())
+        lesson_words = set(" ".join([title, sign_title, slug]).split())
+        if not query_words or not lesson_words:
+            return 0
+        return round(100 * len(query_words & lesson_words) / len(query_words | lesson_words))
+
+
+def find_matching_lesson(user_query, score_cutoff=55):
+    lessons = list(Lesson.objects.select_related("sign").all())
     if not lessons:
         return None, 0
 
-    choices = {lesson.title: lesson for lesson in lessons}
+    forced_title = _detect_alphabet_or_number_intent(user_query)
+    if forced_title:
+        forced = next((lesson for lesson in lessons if lesson.title.lower() == forced_title.lower()), None)
+        if forced:
+            return forced, 100
 
-    forced_title = detect_alphabet_or_number_intent(user_query)
-    if forced_title and forced_title in choices:
-        return choices[forced_title], 100
-
-    best_match = process.extractOne(
-        user_query,
-        choices.keys(),
-        scorer=fuzz.WRatio,
-        score_cutoff=score_cutoff,
-    )
-
-    if best_match:
-        matched_title, score, _ = best_match
-        return choices[matched_title], score
-    return None, 0
+    scored = [(lesson, _score_lesson(user_query, lesson)) for lesson in lessons]
+    lesson, score = max(scored, key=lambda item: item[1])
+    if score >= score_cutoff:
+        return lesson, score
+    return None, score
 
 
-def build_lesson_context(lesson: Lesson) -> str:
+def build_lesson_context(lesson):
     if lesson is None:
         return "Informasi: tidak ditemukan kosakata yang cocok di database"
 
+    category = lesson.sign.get_category_display() if getattr(lesson, "sign", None) else "-"
     video_status = f"Tersedia: {lesson.youtube_url}" if lesson.youtube_url else "Belum tersedia"
-
     return f"""Informasi kosakata:
 Judul: {lesson.title}
-Kategori: {lesson.get_category_display() if hasattr(lesson, 'get_category_display') else lesson.sign.category}
+Kategori: {category}
 Deskripsi: {lesson.summary}
+Instruksi: {lesson.instruction}
 Video referensi: {video_status}
 Estimasi durasi belajar: {lesson.estimated_minutes} menit"""
 
 
-def generate_chatbot_reply(user_query: str) -> dict:
+def _fallback_reply(user_query, lesson):
+    if lesson is None:
+        return "Kosakata itu belum tersedia di database ISYARA. Coba tanya kata BISINDO lain yang ada di library."
+
+    video_text = f" Kamu bisa lihat video referensinya di {lesson.youtube_url}." if lesson.youtube_url else ""
+    summary = lesson.summary.strip() or lesson.instruction.strip()
+    return f"Isyarat {lesson.title} tersedia di ISYARA. {summary}{video_text}"
+
+
+def _generate_with_groq(user_query, context):
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not api_key:
+        return None
+
+    try:
+        from groq import Groq
+    except ImportError:
+        return None
+
+    client = Groq(api_key=api_key)
+    response = client.chat.completions.create(
+        model=os.getenv("GROQ_CHAT_MODEL", "llama-3.3-70b-versatile"),
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"{context}\n\nPertanyaan user: {user_query}"},
+        ],
+        temperature=0.4,
+        max_tokens=250,
+    )
+    return response.choices[0].message.content
+
+
+def generate_chatbot_reply(user_query):
     lesson, score = find_matching_lesson(user_query)
     context = build_lesson_context(lesson)
 
-    user_message = f"""{context}
-
-Pertanyaan user: {user_query}"""
-
     try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_message},
-            ],
-            temperature=0.4,
-            max_tokens=250,
-        )
-        reply_text = response.choices[0].message.content
-    except Exception as e:
-        reply_text = "Maaf, chatbot sedang bermasalah. Coba lagi sebentar lagi."
-        print(f"Groq API error: {e}")
+        reply_text = _generate_with_groq(user_query, context) or _fallback_reply(user_query, lesson)
+    except Exception as exc:
+        print(f"ISYAR-AI chatbot error: {exc}")
+        reply_text = _fallback_reply(user_query, lesson)
 
     return {
         "reply": reply_text,

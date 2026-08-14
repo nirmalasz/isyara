@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 from services.assessment_service.assessment_service import main
-from services.assessment_service.assessment_service.config import BISINDO_CLASSIFIER_MODEL_PATH, BISINDO_YOLO_MODEL_PATH
+from services.assessment_service.assessment_service.config import BISINDO_CLASSIFIER_MODEL_PATH, BISINDO_SIGN_ACCEPTANCE_THRESHOLD, BISINDO_YOLO_MODEL_PATH
 from services.assessment_service.assessment_service.inference.bisindo_classifier import BisindoYoloClassifier
 from services.assessment_service.assessment_service.inference.calibration import BisindoCalibration
 from services.assessment_service.assessment_service.inference.bisindo_detector import BisindoYoloDetector, DetectionResult, clean_bisindo_label
@@ -335,16 +335,16 @@ class AssessmentServiceTests(unittest.TestCase):
         self.assertFalse(stabilizer.accept("Makan", 0.91))
         self.assertTrue(stabilizer.accept("Makan", 0.91))
 
-    def test_default_stabilization_requires_three_of_five_and_duration(self):
+    def test_default_stabilization_accepts_four_matching_frames_without_extra_duration(self):
         stabilizer = PredictionStabilizer()
         result = None
-        for timestamp in [100, 250, 400]:
+        for timestamp in [100, 250, 400, 550]:
             result = stabilizer.evaluate("Halo", 0.98, timestamp_ms=timestamp, probabilities={"Halo": 0.98})
         self.assertTrue(result["accepted"])
-        self.assertEqual(result["agreement_count"], 3)
-        self.assertEqual(result["required_count"], 3)
-        self.assertEqual(result["required_window"], 5)
-        self.assertEqual(result["stable_duration_ms"], 300)
+        self.assertEqual(result["agreement_count"], 4)
+        self.assertEqual(result["required_count"], 4)
+        self.assertEqual(result["required_window"], 4)
+        self.assertEqual(result["required_duration_ms"], 0)
 
     def test_stable_high_confidence_sequences_accept_priority_classes(self):
         priority_classes = [
@@ -368,10 +368,174 @@ class AssessmentServiceTests(unittest.TestCase):
             with self.subTest(label=label):
                 stabilizer = PredictionStabilizer()
                 result = None
-                for index in range(3):
+                for index in range(4):
                     result = stabilizer.evaluate(label, 0.98, timestamp_ms=100 + index * 150, probabilities={label: 0.98})
                 self.assertTrue(result["accepted"])
                 self.assertEqual(result["stable_label"], label)
+
+    def test_stable_live_confidence_accepts_all_nineteen_classes(self):
+        labels = [
+            "Anda",
+            "Apa",
+            "Berhenti",
+            "Bodoh",
+            "Cantik",
+            "Halo",
+            "Hati-hati",
+            "Lelah",
+            "Maaf",
+            "Makan",
+            "Mau",
+            "Membaca",
+            "Nama",
+            "Sama-sama",
+            "Saya",
+            "Siapa",
+            "Sombong",
+            "Takut",
+            "Terima kasih",
+        ]
+        self.assertLessEqual(BISINDO_SIGN_ACCEPTANCE_THRESHOLD, 0.28)
+        for label in labels:
+            with self.subTest(label=label):
+                stabilizer = PredictionStabilizer(min_average_confidence=BISINDO_SIGN_ACCEPTANCE_THRESHOLD)
+                result = None
+                for index in range(4):
+                    result = stabilizer.evaluate(label, 0.28, timestamp_ms=100 + index * 150, probabilities={label: 0.28})
+                self.assertTrue(result["accepted"])
+                self.assertEqual(result["stable_label"], label)
+
+    def test_temporal_smoothing_uses_live_acceptance_threshold_not_calibration_threshold(self):
+        main.prediction_smoother.reset()
+        payload = {
+            "status": "low_confidence",
+            "detected": False,
+            "class_id": 5,
+            "raw_label": "Halo -BISINDO-",
+            "display_label": "Halo",
+            "confidence": 0.28,
+            "raw_predictions": [
+                {
+                    "class_id": 5,
+                    "raw_label": "Halo -BISINDO-",
+                    "label": "Halo",
+                    "confidence": 0.28,
+                    "calibrated_confidence": 0.28,
+                    "class_threshold": 0.95,
+                }
+            ],
+            "detections": 1,
+            "valid_detections": 1,
+        }
+        result = DetectionResult(
+            status="low_confidence",
+            detected=False,
+            class_id=5,
+            raw_label="Halo -BISINDO-",
+            display_label="Halo",
+            confidence=0.28,
+            raw_predictions=payload["raw_predictions"],
+        )
+        smoothed, smoothed_payload, _smoothing = main._apply_temporal_smoothing(result, payload)
+        self.assertTrue(smoothed.detected)
+        self.assertEqual(smoothed.display_label, "Halo")
+        self.assertEqual(smoothed_payload["class_threshold"], BISINDO_SIGN_ACCEPTANCE_THRESHOLD)
+        self.assertEqual(smoothed_payload["calibration_class_threshold"], 0.95)
+
+    def test_predict_sign_accepts_halo_below_dataset_calibration_threshold(self):
+        original = main.bisindo_detector
+        original_classifier = main.bisindo_classifier
+        original_stabilizer = main.prediction_stabilizer
+        main.prediction_smoother.reset()
+        halo_result = DetectionResult(
+            status="ok",
+            detected=True,
+            class_id=5,
+            raw_label="Halo -BISINDO-",
+            display_label="Halo",
+            confidence=0.28,
+            raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.28}],
+            detections=1,
+            threshold_detections=1,
+            valid_detections=1,
+        )
+        fake = FakeSequenceDetector([halo_result, halo_result, halo_result, halo_result])
+        main.bisindo_detector = fake
+        main.bisindo_classifier = fake
+        main.prediction_stabilizer = PredictionStabilizer(min_average_confidence=BISINDO_SIGN_ACCEPTANCE_THRESHOLD)
+        responses = []
+        try:
+            for index, timestamp in enumerate([100, 250, 400, 550]):
+                responses.append(
+                    asyncio.run(
+                        main.predict_sign(
+                            FakeUpload(),
+                            frame_id=f"halo-live-{index}",
+                            hands_detected=1,
+                            timestamp_ms=timestamp,
+                        )
+                    )
+                )
+        finally:
+            main.bisindo_detector = original
+            main.bisindo_classifier = original_classifier
+            main.prediction_stabilizer = original_stabilizer
+            main.prediction_smoother.reset()
+        self.assertEqual(responses[-1].accepted_prediction, "Halo")
+        self.assertTrue(responses[-1].accepted)
+        self.assertTrue(responses[-1].transcript_append_expected)
+
+    def test_predict_sign_accepts_one_request_when_four_candidate_raw_predictions_agree(self):
+        original = main.bisindo_detector
+        original_classifier = main.bisindo_classifier
+        original_stabilizer = main.prediction_stabilizer
+        main.prediction_smoother.reset()
+        halo_result = DetectionResult(
+            status="ok",
+            detected=True,
+            class_id=5,
+            raw_label="Halo -BISINDO-",
+            display_label="Halo",
+            confidence=0.28,
+            raw_predictions=[{"class_id": 5, "raw_label": "Halo -BISINDO-", "label": "Halo", "confidence": 0.28}],
+            detections=1,
+            threshold_detections=1,
+            valid_detections=1,
+        )
+        fake = FakeSequenceDetector([halo_result, halo_result, halo_result, halo_result])
+        main.bisindo_detector = fake
+        main.bisindo_classifier = fake
+        main.prediction_stabilizer = PredictionStabilizer(min_average_confidence=BISINDO_SIGN_ACCEPTANCE_THRESHOLD)
+        candidates_json = json.dumps(
+            [
+                {"type": "left_square_context", "x1": 100, "y1": 40, "x2": 240, "y2": 200, "source_width": 640, "source_height": 480},
+                {"type": "left_large_context", "x1": 80, "y1": 20, "x2": 270, "y2": 230, "source_width": 640, "source_height": 480},
+                {"type": "left_face_union", "x1": 70, "y1": 10, "x2": 310, "y2": 240, "source_width": 640, "source_height": 480},
+                {"type": "left_upper_body", "x1": 60, "y1": 0, "x2": 340, "y2": 300, "source_width": 640, "source_height": 480},
+            ]
+        )
+        try:
+            response = asyncio.run(
+                main.predict_sign(
+                    image=None,
+                    candidates=[FakeUpload(), FakeUpload(), FakeUpload(), FakeUpload()],
+                    frame_id="halo-four-candidates",
+                    mirrored=False,
+                    hands_detected=1,
+                    candidates_json=candidates_json,
+                    timestamp_ms=100,
+                )
+            )
+        finally:
+            main.bisindo_detector = original
+            main.bisindo_classifier = original_classifier
+            main.prediction_stabilizer = original_stabilizer
+            main.prediction_smoother.reset()
+        self.assertTrue(response.accepted)
+        self.assertEqual(response.accepted_prediction, "Halo")
+        self.assertTrue(response.transcript_append_expected)
+        self.assertEqual(response.candidate_agreement_label, "Halo")
+        self.assertEqual(response.candidate_agreement_count, 4)
 
     def test_sentence_flow_accepts_next_words_without_full_no_hand_release(self):
         stabilizer = PredictionStabilizer()
@@ -379,13 +543,16 @@ class AssessmentServiceTests(unittest.TestCase):
         sequence = [
             ("Saya", 100),
             ("Saya", 250),
-            ("Saya", 500),
-            ("Mau", 650),
-            ("Mau", 800),
-            ("Mau", 950),
-            ("Makan", 1100),
-            ("Makan", 1250),
-            ("Makan", 1400),
+            ("Saya", 400),
+            ("Saya", 550),
+            ("Mau", 700),
+            ("Mau", 850),
+            ("Mau", 1000),
+            ("Mau", 1150),
+            ("Makan", 1300),
+            ("Makan", 1450),
+            ("Makan", 1600),
+            ("Makan", 1750),
         ]
         for label, timestamp in sequence:
             result = stabilizer.evaluate(label, 0.9, timestamp_ms=timestamp, probabilities={label: 0.9})
@@ -396,14 +563,14 @@ class AssessmentServiceTests(unittest.TestCase):
     def test_same_word_requires_release_before_second_acceptance(self):
         stabilizer = PredictionStabilizer()
         accepted = []
-        for timestamp in [100, 250, 500, 650, 800, 950]:
+        for timestamp in [100, 250, 400, 550, 700, 850, 1000]:
             result = stabilizer.evaluate("Saya", 0.9, timestamp_ms=timestamp, probabilities={"Saya": 0.9})
             if result["accepted"]:
                 accepted.append(result["stable_label"])
         self.assertEqual(accepted, ["Saya"])
         for timestamp in [1100, 1250, 1400]:
             stabilizer.evaluate(None, 0, timestamp_ms=timestamp)
-        for timestamp in [1550, 1700, 1850]:
+        for timestamp in [1550, 1700, 1850, 2000]:
             result = stabilizer.evaluate("Saya", 0.9, timestamp_ms=timestamp, probabilities={"Saya": 0.9})
             if result["accepted"]:
                 accepted.append(result["stable_label"])

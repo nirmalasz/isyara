@@ -19,10 +19,7 @@ const speechTranscript = document.getElementById("speechTranscript");
 const recordSpeech = document.getElementById("recordSpeech");
 const stopSpeech = document.getElementById("stopSpeech");
 const copySpeechText = document.getElementById("copySpeechText");
-const speakSpeechText = document.getElementById("speakSpeechText");
 const debugRawPredictions = document.getElementById("debugRawPredictions");
-const debugStablePrediction = document.getElementById("debugStablePrediction");
-const debugSuppression = document.getElementById("debugSuppression");
 const debugClassifierInputPreview = document.getElementById("debugClassifierInputPreview");
 const debugClassifierInputMeta = document.getElementById("debugClassifierInputMeta");
 const evalPanel = document.getElementById("translatorEvalPanel");
@@ -82,6 +79,9 @@ let evalCaptureRemaining = 0;
 let evalCaptureTarget = null;
 let speechRecorder;
 let speechChunks = [];
+let speechRecognition;
+let speechRecognitionText = "";
+let speechRecognitionActive = false;
 const yoloCanvas = document.createElement("canvas");
 const yoloContext = yoloCanvas.getContext("2d", { willReadFrequently: false });
 const roiCanvas = document.createElement("canvas");
@@ -113,7 +113,7 @@ function renderTranscript() {
 }
 
 function updateDebug(result, stableLabel = null, suppressed = false) {
-  if (!debugRawPredictions || !debugStablePrediction || !debugSuppression) return;
+  if (!debugRawPredictions) return;
   const rawPredictions = result.raw_predictions || [];
   const candidatePredictions = result.candidate_predictions || [];
   debugRawPredictions.textContent = candidatePredictions.length
@@ -121,51 +121,6 @@ function updateDebug(result, stableLabel = null, suppressed = false) {
     : rawPredictions.length
     ? rawPredictions.map((item) => `${item.label || item.raw_label}: ${Math.round(Number(item.confidence || 0) * 100)}%`).join("\n")
     : "-";
-  const selected = result.selected_candidate;
-  debugStablePrediction.textContent = stableLabel || result.stable_prediction || "-";
-  debugSuppression.textContent = [
-    `hands=${result.hands_detected ?? 0}`,
-    `handed=${(result.handedness || []).join(",") || "-"}`,
-    `model=${result.inference_model || "-"}`,
-    `selected=${selected ? `${selected.roi_type}/${selected.label || "-"}/${Math.round(Number(selected.confidence || 0) * 100)}%` : "-"}`,
-    `roi_type=${result.roi_type || "-"}`,
-    `roi=${result.roi ? `${Math.round(result.roi.x1)},${Math.round(result.roi.y1)},${Math.round(result.roi.x2)},${Math.round(result.roi.y2)}` : "-"}`,
-    `stable=${Boolean(stableLabel || result.stable)}`,
-    `suppressed=${Boolean(suppressed || result.suppressed)}`,
-    `lock=${result.locked_label || "-"}`,
-    `release=${result.release_misses || 0}`,
-    `state=${result.recognition_state || "-"}`,
-    `gate=${result.recognition_rejection_reason || "-"}`,
-    `pose=${result.pose_state || "-"}`,
-    `landmark_motion=${Number(result.landmark_motion_score ?? 0).toFixed(4)}`,
-    `roi_motion=${Number(result.roi_motion_score ?? 0).toFixed(4)}`,
-    `raw=${result.raw_top1_label || "-"}:${Math.round(Number(result.raw_top1_confidence || 0) * 100)}%`,
-    `raw_top1=${result.raw_top1?.label || "-"}:${Math.round(Number(result.raw_top1?.confidence || 0) * 100)}%`,
-    `smoothed=${result.smoothed_top1?.label || "-"}:${Math.round(Number(result.smoothed_confidence || 0) * 100)}%`,
-    `stable_class=${result.current_stable_class || "-"}`,
-    `switch=${result.switch_candidate || "-"}:${result.switch_confirm_count ?? 0}/${result.switch_confirm_frames ?? "-"}`,
-    `switch_margin=${Math.round(Number(result.switch_margin || 0) * 100)}%`,
-    `agg=${Math.round(Number(result.aggregated_confidence || 0) * 100)}%`,
-    `history=${(result.recognition_history || []).map((item) => `${item.label}:${Math.round(Number(item.confidence || 0) * 100)}%`).join(">") || "-"}`,
-    `agreement=${result.agreement_count ?? 0}/${result.required_count ?? "-"} in ${result.required_window ?? "-"} frames`,
-    `stable_ms=${result.stable_duration_ms ?? 0}/${result.required_duration_ms ?? "-"}`,
-    `margin=${Math.round(Number(result.margin || 0) * 100)}%`,
-    `threshold=${Math.round(Number(result.class_threshold || 0) * 100)}%`,
-    `top2=${result.top2_label || "-"}:${Math.round(Number(result.top2_confidence || 0) * 100)}%`,
-    `eligible=${(result.eligible_classes || []).length}`,
-    `masked=${(result.masked_classes || []).join(",") || "-"}`,
-    `struct=${Math.round(Number(result.structural_compatibility ?? 0) * 100)}%`,
-    `struct_gate=${result.structural_rejection_reason || "-"}`,
-    `handshape=${Math.round(Number(result.geometry_compatibility?.handshape ?? 1) * 100)}%`,
-    `body=${Math.round(Number(result.geometry_compatibility?.body_location ?? 1) * 100)}%`,
-    `two_hand=${Math.round(Number(result.geometry_compatibility?.two_hand_geometry ?? 1) * 100)}%`,
-    `fused=${Math.round(Number(result.fused_confidence ?? result.confidence ?? 0) * 100)}%`,
-    `transcript_append=${result.transcript_append_expected ?? false}`,
-    `calibration=${formatCalibrationDebug(result).replaceAll("\n", " | ")}`,
-    `frame=${result.frame_id || "-"}`,
-    `image=${result.image_width || "-"}x${result.image_height || "-"}`,
-    `mirrored=${result.mirrored ?? AI_INPUT_MIRRORED}`,
-  ].join(" ");
   updateClassifierInputPreview(result);
 }
 
@@ -1065,6 +1020,7 @@ function switchMode(mode) {
 }
 
 async function startSpeechRecording() {
+  if (startBrowserSpeechRecognition()) return;
   try {
     const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     speechChunks = [];
@@ -1081,6 +1037,87 @@ async function startSpeechRecording() {
   } catch (error) {
     console.error("[ISYARA Translator] microphone failed", error);
     microphoneStatus.textContent = "! Mikrofon tidak tersedia";
+  }
+}
+
+function startBrowserSpeechRecognition() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) return false;
+  if (speechRecognitionActive) return true;
+
+  speechRecognitionText = "";
+  speechRecognition = new Recognition();
+  speechRecognition.lang = "id-ID";
+  speechRecognition.continuous = false;
+  speechRecognition.interimResults = true;
+  speechRecognition.maxAlternatives = 1;
+
+  speechRecognition.onstart = () => {
+    speechRecognitionActive = true;
+    microphoneStatus.textContent = "● Merekam...";
+    speechTranscript.textContent = "Dengarkan ucapan...";
+    recordSpeech.disabled = true;
+    stopSpeech.disabled = false;
+  };
+
+  speechRecognition.onresult = (event) => {
+    let finalText = "";
+    let interimText = "";
+    for (let index = 0; index < event.results.length; index += 1) {
+      const transcript = event.results[index][0]?.transcript || "";
+      if (event.results[index].isFinal) {
+        finalText += transcript;
+      } else {
+        interimText += transcript;
+      }
+    }
+    speechRecognitionText = (finalText || interimText).trim();
+    speechTranscript.textContent = speechRecognitionText || "Dengarkan ucapan...";
+  };
+
+  speechRecognition.onerror = (event) => {
+    console.error("[ISYARA Translator] browser speech recognition failed", event.error);
+    speechRecognitionActive = false;
+    recordSpeech.disabled = false;
+    stopSpeech.disabled = true;
+    microphoneStatus.textContent = event.error === "not-allowed" ? "! Mikrofon tidak diizinkan" : "! Transkripsi gagal";
+    if (!speechRecognitionText) {
+      speechTranscript.textContent = event.error === "not-allowed" ? "Izinkan akses mikrofon untuk transkripsi." : "Suara belum berhasil ditranskripsi.";
+    }
+  };
+
+  speechRecognition.onend = () => {
+    speechRecognitionActive = false;
+    recordSpeech.disabled = false;
+    stopSpeech.disabled = true;
+    const text = speechRecognitionText.trim();
+    if (!text) {
+      microphoneStatus.textContent = "○ Belum ada suara dikenali";
+      speechTranscript.textContent = "Tidak ada suara yang dikenali.";
+      return;
+    }
+    microphoneStatus.textContent = "✓ Transkripsi selesai";
+    speechTranscript.textContent = text;
+    saveHistory("SPEECH_TO_TEXT", "audio", text, null);
+  };
+
+  try {
+    speechRecognition.start();
+    return true;
+  } catch (error) {
+    console.info("[ISYARA Translator] browser speech recognition unavailable at runtime", error);
+    speechRecognitionActive = false;
+    return false;
+  }
+}
+
+function stopSpeechInput() {
+  if (speechRecognitionActive && speechRecognition) {
+    speechRecognition.stop();
+    return;
+  }
+  if (speechRecorder && speechRecorder.state !== "inactive") {
+    speechRecorder.stop();
   }
 }
 
@@ -1192,9 +1229,8 @@ restartSignTranslator.addEventListener("click", () => {
   renderTranscript();
 });
 recordSpeech.addEventListener("click", startSpeechRecording);
-stopSpeech.addEventListener("click", () => speechRecorder?.stop());
+stopSpeech.addEventListener("click", stopSpeechInput);
 copySpeechText.addEventListener("click", () => navigator.clipboard?.writeText(speechTranscript.textContent || ""));
-speakSpeechText?.addEventListener("click", () => speak(speechTranscript.textContent));
 camera.addEventListener("loadedmetadata", syncCanvas);
 window.addEventListener("resize", syncCanvas);
 

@@ -13,7 +13,7 @@ class SecurityHeadersMiddleware:
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: blob: https://img.youtube.com; "
             "connect-src 'self' https://cdn.jsdelivr.net https://storage.googleapis.com; "
-            "frame-src https://www.youtube.com https://accounts.google.com; "
+            "frame-src https://www.youtube.com; "
             "media-src 'self' blob:; "
             "worker-src 'self' blob:;",
         )

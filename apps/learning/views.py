@@ -13,10 +13,9 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import DetailView, FormView, ListView, TemplateView, UpdateView
-from django.contrib.auth.decorators import login_required
-from apps.learning.services.chatbot_service import generate_chatbot_reply
 from django_ratelimit.decorators import ratelimit
 
+from .chatbot_service import generate_chatbot_reply
 from .forms import LoginForm, OnboardingForm, ProfileForm, SignupForm
 from .models import Lesson, LearningModule, PracticeSession, Progress, Sign, TranslationHistory, UserProfile
 from .progression import build_learning_path, learning_summary, lesson_state
@@ -43,11 +42,6 @@ class SignupView(FormView):
     form_class = SignupForm
     success_url = reverse_lazy("translator")
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["google_oauth_configured"] = bool(settings.SOCIALACCOUNT_PROVIDERS["google"]["APP"]["client_id"])
-        return context
-
     def form_valid(self, form):
         user = form.save()
         login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
@@ -59,11 +53,6 @@ class SignupView(FormView):
 class LoginView(FormView):
     template_name = "account/login.html"
     form_class = LoginForm
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["google_oauth_configured"] = bool(settings.SOCIALACCOUNT_PROVIDERS["google"]["APP"]["client_id"])
-        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -627,19 +616,19 @@ class SaveTranslationHistoryAPIView(LoginRequiredMixin, View):
         )
         return JsonResponse({"status": "saved", "id": item.id}, status=201)
 
-@login_required
-def chatbot_reply_view(request):
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid request"}, status=400)
 
-    user_query = data.get("message", "").strip()
-    if not user_query:
-        return JsonResponse({"error": "Pesan tidak boleh kosong"}, status=400)
+@method_decorator(ratelimit(key="user_or_ip", rate="30/m", method="POST", block=True), name="post")
+class ChatbotReplyAPIView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            payload = json.loads(request.body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({"error": "Payload tidak valid."}, status=400)
 
-    if len(user_query) > 300:
-        return JsonResponse({"error": "Pesan terlalu panjang"}, status=400)
+        user_query = (payload.get("message") or "").strip()
+        if not user_query:
+            return JsonResponse({"error": "Pesan tidak boleh kosong."}, status=400)
+        if len(user_query) > 300:
+            return JsonResponse({"error": "Pesan terlalu panjang."}, status=400)
 
-    result = generate_chatbot_reply(user_query)
-    return JsonResponse(result)
+        return JsonResponse(generate_chatbot_reply(user_query))

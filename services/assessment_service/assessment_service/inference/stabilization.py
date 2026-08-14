@@ -6,18 +6,18 @@ from collections import Counter, defaultdict
 class PredictionStabilizer:
     def __init__(
         self,
-        window=5,
-        stable_count=3,
+        window=4,
+        stable_count=4,
         release_window=3,
-        min_average_confidence=0.75,
-        min_stable_duration_ms=300,
+        min_average_confidence=0.25,
+        min_stable_duration_ms=0,
         high_confidence_threshold=1.1,
         high_confidence_window=5,
         high_confidence_count=3,
         high_confidence_stable_ms=300,
-        normal_confidence_window=5,
-        normal_confidence_count=3,
-        normal_confidence_stable_ms=300,
+        normal_confidence_window=4,
+        normal_confidence_count=4,
+        normal_confidence_stable_ms=0,
     ):
         self.window = window
         self.stable_count = stable_count

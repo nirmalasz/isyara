@@ -12,6 +12,7 @@ from .config import BISINDO_CLASSIFICATION_CONFIDENCE_THRESHOLD, BISINDO_INFEREN
 from .config import BISINDO_HIGH_CONFIDENCE_MATCHES, BISINDO_HIGH_CONFIDENCE_STABLE_MS, BISINDO_HIGH_CONFIDENCE_THRESHOLD, BISINDO_HIGH_CONFIDENCE_WINDOW
 from .config import BISINDO_NORMAL_CONFIDENCE_MATCHES, BISINDO_NORMAL_CONFIDENCE_STABLE_MS, BISINDO_NORMAL_CONFIDENCE_WINDOW
 from .config import BISINDO_PROBABILITY_SMOOTHING_BETA, BISINDO_RELEASE_WINDOW, BISINDO_STABILIZATION_MATCHES, BISINDO_STABILIZATION_WINDOW, BISINDO_STABLE_DURATION_MS
+from .config import BISINDO_SIGN_ACCEPTANCE_THRESHOLD
 from .config import BISINDO_SWITCH_CONFIRM_FRAMES, BISINDO_SWITCH_MARGIN
 from .inference.bisindo_classifier import BisindoYoloClassifier
 from .inference.bisindo_detector import DetectionResult, BisindoYoloDetector
@@ -124,6 +125,8 @@ class PredictSignResponse(BaseModel):
     region_votes: list[str] = Field(default_factory=list)
     classifier_debug: dict = Field(default_factory=dict)
     transcript_append_expected: bool = False
+    candidate_agreement_count: int | None = None
+    candidate_agreement_label: str | None = None
     landmark_motion_score: float | None = None
     roi_motion_score: float | None = None
     pose_state: str | None = None
@@ -150,7 +153,7 @@ prediction_stabilizer = PredictionStabilizer(
     window=BISINDO_STABILIZATION_WINDOW,
     stable_count=BISINDO_STABILIZATION_MATCHES,
     release_window=BISINDO_RELEASE_WINDOW,
-    min_average_confidence=BISINDO_YOLO_CONFIDENCE_THRESHOLD,
+    min_average_confidence=BISINDO_SIGN_ACCEPTANCE_THRESHOLD,
     min_stable_duration_ms=BISINDO_STABLE_DURATION_MS,
     high_confidence_threshold=BISINDO_HIGH_CONFIDENCE_THRESHOLD,
     high_confidence_window=BISINDO_HIGH_CONFIDENCE_WINDOW,
@@ -197,6 +200,7 @@ def health():
         "bisindo_inference_mode": _active_inference_mode(),
         "confidence_threshold": BISINDO_YOLO_CONFIDENCE_THRESHOLD,
         "classification_confidence_threshold": BISINDO_CLASSIFICATION_CONFIDENCE_THRESHOLD,
+        "sign_acceptance_threshold": BISINDO_SIGN_ACCEPTANCE_THRESHOLD,
     }
 
 
@@ -236,6 +240,7 @@ def model_info():
         "classifier": bisindo_classifier.model_info(),
         "calibration": bisindo_calibration.report(),
         "structure": terbisa_structure.report(),
+        "sign_acceptance_threshold": BISINDO_SIGN_ACCEPTANCE_THRESHOLD,
     }
 
 
@@ -365,6 +370,17 @@ async def predict_sign(
         item["label"]: item.get("calibrated_confidence", item.get("confidence", 0)) for item in payload.get("raw_predictions", [])
     }
     stability = prediction_stabilizer.evaluate(result.display_label, result.confidence or 0, timestamp_ms=timestamp_ms, probabilities=probabilities)
+    consensus = _candidate_consensus(payload, result.display_label)
+    if result.display_label and not stability["accepted"] and consensus["count"] >= BISINDO_STABILIZATION_MATCHES:
+        for _ in range(max(0, BISINDO_STABILIZATION_MATCHES - 1)):
+            stability = prediction_stabilizer.evaluate(
+                result.display_label,
+                result.confidence or consensus["confidence"] or 0,
+                timestamp_ms=timestamp_ms,
+                probabilities=probabilities,
+            )
+            if stability["accepted"] or stability["suppressed"]:
+                break
     raw_top1 = payload.get("raw_predictions", [{}])[0] if payload.get("raw_predictions") else {}
     motion_debug = _motion_debug_fields(structure, smoothing)
     payload.update(
@@ -417,6 +433,8 @@ async def predict_sign(
             "region_votes": payload.get("region_votes", []),
             "classifier_debug": payload.get("debug", {}),
             "transcript_append_expected": stability["accepted"],
+            "candidate_agreement_count": consensus["count"],
+            "candidate_agreement_label": consensus["label"],
             **motion_debug,
         }
     )
@@ -482,7 +500,7 @@ def _apply_temporal_smoothing(result, payload, structure=None):
     if not stable_label:
         return result, payload, smoothing
     best = next((item for item in payload.get("raw_predictions", []) if item.get("label") == stable_label), None)
-    threshold = (best or {}).get("class_threshold", BISINDO_YOLO_CONFIDENCE_THRESHOLD)
+    threshold = BISINDO_SIGN_ACCEPTANCE_THRESHOLD
     if stable_confidence is None or stable_confidence < threshold:
         payload.update(
             {
@@ -538,6 +556,7 @@ def _apply_temporal_smoothing(result, payload, structure=None):
             "rejection_reason": None,
             "calibrated_confidence": stable_confidence,
             "class_threshold": threshold,
+            "calibration_class_threshold": (best or {}).get("class_threshold"),
         }
     )
     return smoothed, payload, smoothing
@@ -558,6 +577,28 @@ def _motion_debug_fields(structure, smoothing):
         "switch_confirm_count": smoothing.get("switch_confirm_count"),
         "switch_confirm_frames": smoothing.get("switch_confirm_frames"),
     }
+
+
+def _candidate_consensus(payload, stable_label):
+    labels = []
+    confidences = []
+    for candidate in payload.get("candidate_predictions", []):
+        raw_predictions = candidate.get("raw_predictions") or []
+        top = raw_predictions[0] if raw_predictions else {}
+        label = top.get("label")
+        if not label:
+            continue
+        confidence = float(top.get("calibrated_confidence", top.get("confidence", 0)) or 0)
+        if confidence < BISINDO_SIGN_ACCEPTANCE_THRESHOLD:
+            continue
+        labels.append(label)
+        confidences.append(confidence)
+    if not labels or len(set(labels)) != 1:
+        return {"label": None, "count": 0, "confidence": None}
+    label = labels[0]
+    if stable_label and label != stable_label:
+        return {"label": label, "count": 0, "confidence": None}
+    return {"label": label, "count": len(labels), "confidence": sum(confidences) / len(confidences)}
 
 
 def _json_object(raw_json):
