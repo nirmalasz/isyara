@@ -15,7 +15,7 @@ from django.views import View
 from django.views.generic import DetailView, FormView, ListView, TemplateView, UpdateView
 from django_ratelimit.decorators import ratelimit
 
-from .chatbot_service import generate_chatbot_reply
+from .services.chatbot_service import generate_chatbot_reply
 from .forms import LoginForm, OnboardingForm, ProfileForm, SignupForm
 from .models import Lesson, LearningModule, PracticeSession, Progress, Sign, TranslationHistory, UserProfile
 from .progression import build_learning_path, learning_summary, lesson_state
