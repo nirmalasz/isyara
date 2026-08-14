@@ -1,6 +1,6 @@
 import os
 
-from .models import Lesson
+from ..models import Lesson
 
 
 SYSTEM_PROMPT = """Kamu adalah asisten BISINDO bernama ISYAR-AI.
